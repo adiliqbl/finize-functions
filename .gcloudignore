@@ -13,6 +13,8 @@
 .git
 .gitignore
 
-/test
+/tests
+README.md
+deploy.sh
 
 #!include:.gitignore

@@ -19,7 +19,7 @@ while getopts ":p:r:" opt; do
 done
 
 gcloud functions deploy OnUserCreated \
-  --entry-point ENTRY_POINT \
+  --entry-point "OnUserCreated" \
   --runtime "${runtime:-go119}" \
   --trigger-event "providers/cloud.firestore/eventTypes/document.write" \
   --trigger-resource "projects/$pid/databases/(default)/documents/users/{userId}" \
