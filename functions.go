@@ -2,9 +2,9 @@ package finize_functions
 
 import (
 	"context"
-	"finize-functions/data"
-	"finize-functions/data/model"
-	"finize-functions/functions"
+	"finize-functions.app/data"
+	"finize-functions.app/data/model"
+	"finize-functions.app/functions"
 )
 
 func OnUserCreated(ctx context.Context, e data.FirestoreEvent[model.User]) error {

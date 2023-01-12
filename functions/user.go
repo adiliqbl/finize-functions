@@ -2,8 +2,8 @@ package functions
 
 import (
 	"context"
-	"finize-functions/data"
-	"finize-functions/data/model"
+	"finize-functions.app/data"
+	"finize-functions.app/data/model"
 	"log"
 	"strings"
 )

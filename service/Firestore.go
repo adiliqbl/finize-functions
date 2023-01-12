@@ -3,8 +3,8 @@ package service
 import (
 	"cloud.google.com/go/firestore"
 	"context"
-	"finize-functions/config"
-	"finize-functions/util"
+	"finize-functions.app/config"
+	"finize-functions.app/util"
 	firebase "firebase.google.com/go/v4"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

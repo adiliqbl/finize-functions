@@ -1,9 +1,9 @@
 package tests
 
 import (
-	"finize-functions/data"
-	"finize-functions/data/model"
-	"finize-functions/util"
+	"finize-functions.app/data"
+	"finize-functions.app/data/model"
+	"finize-functions.app/util"
 	"testing"
 )
 

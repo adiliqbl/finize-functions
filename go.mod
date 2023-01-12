@@ -1,4 +1,4 @@
-module finize-functions
+module finize-functions.app
 
 go 1.19
 

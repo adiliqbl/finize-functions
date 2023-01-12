@@ -1,6 +1,6 @@
 package model
 
-import . "finize-functions/data"
+import . "finize-functions.app/data"
 
 type User struct {
 	ID    StringValue `json:"id"`
