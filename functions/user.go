@@ -9,14 +9,11 @@ import (
 )
 
 func OnUserCreated(ctx context.Context, e data.FirestoreEvent[model.User]) error {
-	fullPath := strings.Split(e.Value.Name, "/documents/")[1]
-	pathParts := strings.Split(fullPath, "/")
-	collection := pathParts[0]
-	doc := strings.Join(pathParts[1:], "/")
+	collection, doc, _ := e.Path()
 
 	log.Printf(collection + "/" + doc)
 
-	curValue := e.Value.Data.ID.StringValue
+	curValue := e.Value.Data.ID
 	newValue := strings.ToUpper(curValue)
 	if curValue == newValue {
 		log.Printf("%q is already upper case: skipping", curValue)

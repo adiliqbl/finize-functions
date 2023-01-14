@@ -50,19 +50,17 @@ func (store *Firestore[T]) FindByID(path string) (*T, error) {
 		return nil, err
 	}
 
-	return util.FromDocument[T](snap.Data())
+	var obj T
+	snap.DataTo(&obj)
+	document, err := util.MapTo[T](snap.Data())
+	return &document, err
 }
 
-func (store *Firestore[T]) Create(collection string, data T) (interface{}, error) {
-	doc, err := util.ToDocument(data)
-	if err != nil {
-		return nil, err
-	}
-
+func (store *Firestore[T]) Create(collection string, doc map[string]interface{}) (interface{}, error) {
 	ref := store.client.Collection(collection).NewDoc()
 	doc["id"] = ref.ID
 
-	_, err = ref.Set(store.ctx, doc)
+	_, err := ref.Set(store.ctx, doc)
 	if err != nil {
 		log.Fatalf("Firestore.Create: %v", err)
 		return nil, err
@@ -71,13 +69,8 @@ func (store *Firestore[T]) Create(collection string, data T) (interface{}, error
 	return ref.ID, nil
 }
 
-func (store *Firestore[T]) Update(path string, data T) (bool, error) {
-	doc, err := util.ToDocument(data)
-	if err != nil {
-		return false, err
-	}
-
-	_, err = store.client.Doc(path).Set(store.ctx, doc, firestore.MergeAll)
+func (store *Firestore[T]) Update(path string, doc map[string]interface{}) (bool, error) {
+	_, err := store.client.Doc(path).Set(store.ctx, doc, firestore.MergeAll)
 	if err != nil {
 		log.Fatalf("Firestore.Create: %v", err)
 		return false, err

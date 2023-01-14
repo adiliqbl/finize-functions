@@ -2,9 +2,14 @@ package model
 
 import . "finize-functions.app/data"
 
-type User struct {
+type UserEvent struct {
 	ID    StringValue `json:"id"`
 	Name  StringValue `json:"name"`
 	Email StringValue `json:"email"`
-	Image StringValue `json:"image,omitempty"`
+}
+
+type User struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
