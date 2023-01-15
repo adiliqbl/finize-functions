@@ -1,9 +1,9 @@
-package tests
+package data
 
 import (
 	"finize-functions.app/data"
 	"finize-functions.app/data/model"
-	"finize-functions.app/tests/fakedata"
+	"finize-functions.app/tests/fake"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -13,11 +13,11 @@ func TestParsingDocumentPath(t *testing.T) {
 	event := data.FirestoreEvent[model.UserEvent]{
 		OldValue: data.FirestoreValue[model.UserEvent]{
 			Name: "projects/projectId/databases/(default)/documents/users/userId",
-			Data: fakedata.NewUserEvent("id", "name", "email"),
+			Data: fake.NewUserEvent("id", "name", "email"),
 		},
 		Value: data.FirestoreValue[model.UserEvent]{
 			Name: "projects/projectId/databases/(default)/documents/users/userId",
-			Data: fakedata.NewUserEvent("id", "new name", "new email"),
+			Data: fake.NewUserEvent("id", "new name", "new email"),
 		},
 	}
 
@@ -31,11 +31,11 @@ func TestParsingDocumentPath(t *testing.T) {
 	event = data.FirestoreEvent[model.UserEvent]{
 		OldValue: data.FirestoreValue[model.UserEvent]{
 			Name: "projects/projectId/databases/(default)/documents/user-transactions/userId/transactions/transactionId",
-			Data: fakedata.NewUserEvent("id", "name", "email"),
+			Data: fake.NewUserEvent("id", "name", "email"),
 		},
 		Value: data.FirestoreValue[model.UserEvent]{
 			Name: "projects/projectId/databases/(default)/documents/user-transactions/userId/transactions/transactionId",
-			Data: fakedata.NewUserEvent("id", "new name", "new email"),
+			Data: fake.NewUserEvent("id", "new name", "new email"),
 		},
 	}
 

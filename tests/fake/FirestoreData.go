@@ -1,4 +1,4 @@
-package fakedata
+package fake
 
 import (
 	"finize-functions.app/data"
@@ -6,6 +6,15 @@ import (
 	"finize-functions.app/util"
 	"time"
 )
+
+func mapTo[T any](object any) T {
+	obj, _ := util.MapTo[T](object)
+	return obj
+}
+
+func NewUser(obj model.UserEvent) model.User {
+	return mapTo[model.User](obj)
+}
 
 func NewUserEvent(id string, name string, email string) model.UserEvent {
 	return model.UserEvent{
@@ -27,6 +36,10 @@ func NewUserEventMap(user model.UserEvent) map[string]interface{} {
 			"stringValue": user.Email.Value,
 		},
 	}
+}
+
+func NewBudget(obj model.BudgetEvent) model.Budget {
+	return mapTo[model.Budget](obj)
 }
 
 func NewBudgetEvent(id string, name string, limit float64, spent float64) model.BudgetEvent {
@@ -53,6 +66,10 @@ func NewBudgetEventMap(budget model.BudgetEvent) map[string]interface{} {
 			"doubleValue": budget.Spent.Value,
 		},
 	}
+}
+
+func NewAccount(obj model.AccountEvent) model.Account {
+	return mapTo[model.Account](obj)
 }
 
 func NewAccountEvent(id string, name string, balance float64, budget *string) model.AccountEvent {
@@ -87,6 +104,10 @@ func NewAccountEventMap(account model.AccountEvent) map[string]interface{} {
 			"referenceValue": util.ValueOrNull(account.Budget.Get()),
 		},
 	}
+}
+
+func NewTransaction(obj model.TransactionEvent) model.Transaction {
+	return mapTo[model.Transaction](obj)
 }
 
 func NewTransactionEvent(id string, name string, amount float64, amountValue *float64, date time.Time, accountTo *string, accountFrom *string, budget *string) model.TransactionEvent {
