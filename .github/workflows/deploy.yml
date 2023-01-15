@@ -1,0 +1,49 @@
+name: Deploy Function
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    needs: test
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: '1.19'
+
+    # Add "id-token" with the intended permissions.
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: ${{ secrets.GCLOUD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCLOUD_SERVICE_ACCOUNT }}
+
+      - name: 'Set up Cloud SDK'
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Install dependencies
+        run: go get .
+
+      - name: 'Deploy Functions'
+        run:
+          chmod 766 deploy.sh
+          ./deploy ${{ secrets.PROJECT_ID }}

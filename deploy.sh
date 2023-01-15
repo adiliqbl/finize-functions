@@ -1,26 +1,11 @@
 #!/bin/bash
 
-while getopts ":p:r:" opt; do
-  case $opt in
-    p) pid="$OPTARG"
-    ;;
-    r) runtime="$OPTARG"
-    ;;
-    \?) echo "Invalid option -$OPTARG" >&2
-    exit 1
-    ;;
-  esac
-
-  case $OPTARG in
-    -*) echo "Option $opt needs a valid argument"
-    exit 1
-    ;;
-  esac
-done
+RUNTIME="-go119"
+PROJECT_ID=$1
 
 gcloud functions deploy OnUserCreated \
   --entry-point "OnUserCreated" \
-  --runtime "${runtime:-go119}" \
+  --runtime "$RUNTIME" \
   --trigger-event "providers/cloud.firestore/eventTypes/document.write" \
-  --trigger-resource "projects/$pid/databases/(default)/documents/users/{userId}" \
+  --trigger-resource "projects/$PROJECT_ID/databases/(default)/documents/users/{userId}" \
   --retry
