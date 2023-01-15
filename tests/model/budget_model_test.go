@@ -22,5 +22,5 @@ func TestBudgetFromEvent(t *testing.T) {
 	assert.Equal(t, "id", want.ID)
 	assert.Equal(t, "name", want.Name)
 	assert.Equal(t, 50.0, want.Limit)
-	assert.Equal(t, 20.0, want.Spent)
+	assert.Equal(t, 20.0, util.ValueOrNull(want.Spent))
 }

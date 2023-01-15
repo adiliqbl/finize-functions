@@ -28,9 +28,9 @@ func TestAccountFromEvent(t *testing.T) {
 	assert.Equal(t, "type", want.Type)
 	assert.Equal(t, 50.0, want.Balance)
 	assert.Equal(t, "CURR", want.Currency)
-	assert.Equal(t, nil, want.Budget)
+	assert.Equal(t, nil, util.ValueOrNull(want.Budget))
 
 	got = fake.NewAccountEvent("id", "name", 50.0, util.Pointer("budget"))
 	want, _ = util.MapTo[model.Account](got)
-	assert.Equal(t, "budget", want.Budget)
+	assert.Equal(t, "budget", util.ValueOrNull(want.Budget))
 }

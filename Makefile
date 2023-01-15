@@ -1,5 +1,5 @@
 test:
-	go test ./tests
+	go test ./tests/...
 
 test-report:
-	go test ./tests -json
+	go test ./tests/... -json

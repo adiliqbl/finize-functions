@@ -28,10 +28,10 @@ jobs:
         run: go get .
 
       - name: Test with Go
-        run: make test-report > TestResults-${{ matrix.go-version }}.json
+        run: make test-report > TestResults.json
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v3
         with:
-          name: Go-results-${{ matrix.go-version }}
-          path: TestResults-${{ matrix.go-version }}.json
+          name: Test Results
+          path: TestResults.json
