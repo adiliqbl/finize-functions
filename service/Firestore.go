@@ -16,7 +16,18 @@ type Firestore[T any] struct {
 	ctx    context.Context
 }
 
-func NewFirestore[T any]() (*Firestore[T], error) {
+type FirestoreService[T any] interface {
+	Find(path string) (*T, error)
+	Create(collection string, doc map[string]interface{}) (string, error)
+	Update(path string, doc map[string]interface{}) (bool, error)
+	Delete(path string) (bool, error)
+}
+
+func NewFirestore[T any](client *firestore.Client, ctx context.Context) Firestore[T] {
+	return Firestore[T]{client: client, ctx: ctx}
+}
+
+func InitFirestore[T any]() (*Firestore[T], error) {
 	store := new(Firestore[T])
 
 	// Use the application default credentials.
@@ -40,7 +51,7 @@ func NewFirestore[T any]() (*Firestore[T], error) {
 	return store, nil
 }
 
-func (store *Firestore[T]) FindByID(path string) (*T, error) {
+func (store *Firestore[T]) Find(path string) (*T, error) {
 	snap, err := store.client.Doc(path).Get(store.ctx)
 	if err != nil {
 		// Translate firestorm not found to application specific not found.
@@ -50,20 +61,18 @@ func (store *Firestore[T]) FindByID(path string) (*T, error) {
 		return nil, err
 	}
 
-	var obj T
-	snap.DataTo(&obj)
 	document, err := util.MapTo[T](snap.Data())
 	return &document, err
 }
 
-func (store *Firestore[T]) Create(collection string, doc map[string]interface{}) (interface{}, error) {
+func (store *Firestore[T]) Create(collection string, doc map[string]interface{}) (string, error) {
 	ref := store.client.Collection(collection).NewDoc()
 	doc["id"] = ref.ID
 
 	_, err := ref.Set(store.ctx, doc)
 	if err != nil {
 		log.Fatalf("Firestore.Create: %v", err)
-		return nil, err
+		return "", err
 	}
 
 	return ref.ID, nil
@@ -79,7 +88,7 @@ func (store *Firestore[T]) Update(path string, doc map[string]interface{}) (bool
 	return true, nil
 }
 
-func (store *Firestore[T]) DeleteByID(path string) (bool, error) {
+func (store *Firestore[T]) Delete(path string) (bool, error) {
 	_, err := store.client.Doc(path).Delete(store.ctx)
 	if err != nil {
 		// Translate firestorm not found to application specific not found.
