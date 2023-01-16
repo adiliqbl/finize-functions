@@ -11,6 +11,8 @@ import (
 	"log"
 )
 
+var firestoreDatabase *firestore.Client
+
 type Firestore[T any] struct {
 	client *firestore.Client
 	ctx    context.Context
@@ -23,32 +25,27 @@ type FirestoreService[T any] interface {
 	Delete(path string) (bool, error)
 }
 
-func NewFirestore[T any](client *firestore.Client, ctx context.Context) Firestore[T] {
-	return Firestore[T]{client: client, ctx: ctx}
-}
-
-func InitFirestore[T any]() (*Firestore[T], error) {
-	store := new(Firestore[T])
-
+func InitFirestore(ctx context.Context) error {
 	// Use the application default credentials.
 	conf := &firebase.Config{ProjectID: config.ProjectIdD}
 
-	// Use context.Background() because the app/client should persist across
-	// invocations.
-	ctx := context.Background()
-	store.ctx = ctx
-
-	app, err := firebase.NewApp(store.ctx, conf)
+	app, err := firebase.NewApp(ctx, conf)
 	if err != nil {
 		log.Fatalf("firebase.NewApp: %v", err)
 	}
 
-	store.client, err = app.Firestore(store.ctx)
+	client, err := app.Firestore(ctx)
 	if err != nil {
 		log.Fatalf("app.Firestore: %v", err)
+		return err
 	}
 
-	return store, nil
+	firestoreDatabase = client
+	return nil
+}
+
+func newFirestoreService[T any]() FirestoreService[T] {
+	return &Firestore[T]{client: firestoreDatabase, ctx: context.Background()}
 }
 
 func (store *Firestore[T]) Find(path string) (*T, error) {

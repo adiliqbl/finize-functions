@@ -18,6 +18,10 @@ func budgetDoc(userID string, id string) string {
 	return fmt.Sprintf("%s/%s", budgetsDB(userID), id)
 }
 
+func NewBudgetService() BudgetService {
+	return BudgetService{db: newFirestoreService[model.Budget]()}
+}
+
 func (service *BudgetService) FindByID(userID string, id string) (*model.Budget, error) {
 	return service.db.Find(budgetDoc(userID, id))
 }

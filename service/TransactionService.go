@@ -18,6 +18,10 @@ func transactionDoc(userID string, id string) string {
 	return fmt.Sprintf("%s/%s", transactionsDB(userID), id)
 }
 
+func NewTransactionService() TransactionService {
+	return TransactionService{db: newFirestoreService[model.Transaction]()}
+}
+
 func (service *TransactionService) FindByID(userID string, id string) (*model.Transaction, error) {
 	return service.db.Find(transactionDoc(userID, id))
 }

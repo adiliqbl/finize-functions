@@ -18,6 +18,10 @@ func userDoc(id string) string {
 	return fmt.Sprintf("%s/%s", usersDB(), id)
 }
 
+func NewUserService() UserService {
+	return UserService{db: newFirestoreService[model.User]()}
+}
+
 func (service *UserService) FindByID(id string) (*model.User, error) {
 	return service.db.Find(userDoc(id))
 }

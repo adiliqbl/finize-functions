@@ -4,10 +4,6 @@ import (
 	"context"
 )
 
-func CreateRecurringTransactions(ctx context.Context) error {
-	return nil
-}
-
-func GetExchangeRate(ctx context.Context) error {
+func CreateRecurringTransaction(ctx context.Context) error {
 	return nil
 }
