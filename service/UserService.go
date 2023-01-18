@@ -7,7 +7,11 @@ import (
 	"fmt"
 )
 
-type UserService struct {
+type UserService interface {
+	BaseService[model.User]
+}
+
+type userServiceImpl struct {
 	db FirestoreService[model.User]
 }
 
@@ -19,27 +23,27 @@ func userDoc(id string) string {
 	return fmt.Sprintf("%s/%s", usersDB(), id)
 }
 
-func NewUserService() UserService {
-	return UserService{db: NewFirestoreService[model.User]()}
+func (service *userServiceImpl) Doc(id string) *firestore.DocumentRef {
+	return service.db.Doc(userDoc(id))
 }
 
-func (service *UserService) FindByID(id string) (*model.User, error) {
+func (service *userServiceImpl) FindByID(id string) (*model.User, error) {
 	return service.db.Find(userDoc(id), nil)
 }
 
-func (service *UserService) FindByIDWith(id string, tx *firestore.Transaction) (*model.User, error) {
+func (service *userServiceImpl) FindByIDWith(id string, tx *firestore.Transaction) (*model.User, error) {
 	return service.db.Find(userDoc(id), tx)
 }
 
-func (service *UserService) Create(user model.User) (string, error) {
+func (service *userServiceImpl) Create(user model.User) (string, error) {
 	data, _ := util.MapTo[map[string]interface{}](user)
 	return service.db.Create(usersDB(), data)
 }
 
-func (service *UserService) Update(id string, doc map[string]interface{}) (bool, error) {
+func (service *userServiceImpl) Update(id string, doc map[string]interface{}) (bool, error) {
 	return service.db.Update(userDoc(id), doc)
 }
 
-func (service *UserService) Delete(id string) (bool, error) {
+func (service *userServiceImpl) Delete(id string) (bool, error) {
 	return service.db.Delete(userDoc(id))
 }

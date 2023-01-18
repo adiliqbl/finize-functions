@@ -16,7 +16,7 @@ func OnTransactionCreated(ctx context.Context, e data.FirestoreEvent[model.Trans
 	if err != nil {
 		log.Fatalf("Failed to parse transaction %v", e.Value)
 	}
-	return functions.OnTransactionCreated(e.UserID(), transaction)
+	return functions.OnTransactionCreated(service.NewServiceFactory(context.Background(), e.UserID()), transaction)
 }
 
 func OnTransactionUpdated(ctx context.Context, e data.FirestoreEvent[model.TransactionEvent]) error {

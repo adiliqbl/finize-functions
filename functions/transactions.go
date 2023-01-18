@@ -8,10 +8,10 @@ import (
 	"log"
 )
 
-func OnTransactionCreated(userID string, transaction model.Transaction) error {
-	store := service.NewFirestoreService()
-	accounts := service.NewAccountService(userID)
-	budgets := service.NewBudgetService(userID)
+func OnTransactionCreated(factory service.Factory, transaction model.Transaction) error {
+	store := factory.FirestoreService()
+	accounts := factory.AccountService()
+	budgets := factory.BudgetService()
 
 	return store.Transaction(func(tx *firestore.Transaction) error {
 		if !util.NullOrEmpty(transaction.AccountTo) {

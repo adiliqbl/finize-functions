@@ -49,8 +49,8 @@ func InitFirestore(ctx context.Context) error {
 	return nil
 }
 
-func NewFirestoreService[T any]() FirestoreService[T] {
-	return &Firestore[T]{client: firestoreDatabase, ctx: context.Background()}
+func newFirestoreService[T any](ctx context.Context) FirestoreService[T] {
+	return &Firestore[T]{client: firestoreDatabase, ctx: ctx}
 }
 
 func (store *Firestore[T]) Doc(path string) *firestore.DocumentRef {

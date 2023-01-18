@@ -7,7 +7,11 @@ import (
 	"fmt"
 )
 
-type AccountService struct {
+type AccountService interface {
+	BaseService[model.Account]
+}
+
+type accountServiceImpl struct {
 	db     FirestoreService[model.Account]
 	userID string
 }
@@ -20,31 +24,27 @@ func accountDoc(userID string, id string) string {
 	return fmt.Sprintf("%s/%s", accountsDB(userID), id)
 }
 
-func NewAccountService(userId string) AccountService {
-	return AccountService{db: NewFirestoreService[model.Account](), userID: userId}
-}
-
-func (service *AccountService) Doc(id string) *firestore.DocumentRef {
+func (service *accountServiceImpl) Doc(id string) *firestore.DocumentRef {
 	return service.db.Doc(accountDoc(service.userID, id))
 }
 
-func (service *AccountService) FindByID(id string) (*model.Account, error) {
+func (service *accountServiceImpl) FindByID(id string) (*model.Account, error) {
 	return service.db.Find(accountDoc(service.userID, id), nil)
 }
 
-func (service *AccountService) FindByIDWith(id string, tx *firestore.Transaction) (*model.Account, error) {
+func (service *accountServiceImpl) FindByIDWith(id string, tx *firestore.Transaction) (*model.Account, error) {
 	return service.db.Find(accountDoc(service.userID, id), tx)
 }
 
-func (service *AccountService) Create(account model.Account) (string, error) {
+func (service *accountServiceImpl) Create(account model.Account) (string, error) {
 	data, _ := util.MapTo[map[string]interface{}](account)
 	return service.db.Create(accountsDB(service.userID), data)
 }
 
-func (service *AccountService) Update(id string, doc map[string]interface{}) (bool, error) {
+func (service *accountServiceImpl) Update(id string, doc map[string]interface{}) (bool, error) {
 	return service.db.Update(accountDoc(service.userID, id), doc)
 }
 
-func (service *AccountService) Delete(id string) (bool, error) {
+func (service *accountServiceImpl) Delete(id string) (bool, error) {
 	return service.db.Delete(accountDoc(service.userID, id))
 }

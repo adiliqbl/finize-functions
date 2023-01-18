@@ -7,7 +7,11 @@ import (
 	"fmt"
 )
 
-type TransactionService struct {
+type TransactionService interface {
+	BaseService[model.Transaction]
+}
+
+type transactionServiceImpl struct {
 	db     FirestoreService[model.Transaction]
 	userID string
 }
@@ -20,31 +24,27 @@ func transactionDoc(userID string, id string) string {
 	return fmt.Sprintf("%s/%s", transactionsDB(userID), id)
 }
 
-func NewTransactionService(userId string) TransactionService {
-	return TransactionService{db: NewFirestoreService[model.Transaction](), userID: userId}
-}
-
-func (service *TransactionService) Doc(id string) *firestore.DocumentRef {
+func (service *transactionServiceImpl) Doc(id string) *firestore.DocumentRef {
 	return service.db.Doc(transactionDoc(service.userID, id))
 }
 
-func (service *TransactionService) FindByID(id string) (*model.Transaction, error) {
+func (service *transactionServiceImpl) FindByID(id string) (*model.Transaction, error) {
 	return service.db.Find(transactionDoc(service.userID, id), nil)
 }
 
-func (service *TransactionService) FindByIDWith(id string, tx *firestore.Transaction) (*model.Transaction, error) {
+func (service *transactionServiceImpl) FindByIDWith(id string, tx *firestore.Transaction) (*model.Transaction, error) {
 	return service.db.Find(transactionDoc(service.userID, id), tx)
 }
 
-func (service *TransactionService) Create(transaction model.Transaction) (string, error) {
+func (service *transactionServiceImpl) Create(transaction model.Transaction) (string, error) {
 	data, _ := util.MapTo[map[string]interface{}](transaction)
 	return service.db.Create(transactionsDB(service.userID), data)
 }
 
-func (service *TransactionService) Update(id string, doc map[string]interface{}) (bool, error) {
+func (service *transactionServiceImpl) Update(id string, doc map[string]interface{}) (bool, error) {
 	return service.db.Update(transactionDoc(service.userID, id), doc)
 }
 
-func (service *TransactionService) Delete(id string) (bool, error) {
+func (service *transactionServiceImpl) Delete(id string) (bool, error) {
 	return service.db.Delete(transactionDoc(service.userID, id))
 }
