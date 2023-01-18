@@ -1,13 +1,15 @@
 package service
 
 import (
+	"cloud.google.com/go/firestore"
 	"finize-functions.app/data/model"
 	"finize-functions.app/util"
 	"fmt"
 )
 
 type AccountService struct {
-	db FirestoreService[model.Account]
+	db     FirestoreService[model.Account]
+	userID string
 }
 
 func accountsDB(userID string) string {
@@ -18,23 +20,31 @@ func accountDoc(userID string, id string) string {
 	return fmt.Sprintf("%s/%s", accountsDB(userID), id)
 }
 
-func NewAccountService() AccountService {
-	return AccountService{db: newFirestoreService[model.Account]()}
+func NewAccountService(userId string) AccountService {
+	return AccountService{db: NewFirestoreService[model.Account](), userID: userId}
 }
 
-func (service *AccountService) FindByID(userID string, id string) (*model.Account, error) {
-	return service.db.Find(accountDoc(userID, id))
+func (service *AccountService) Doc(id string) *firestore.DocumentRef {
+	return service.db.Doc(accountDoc(service.userID, id))
 }
 
-func (service *AccountService) Create(userID string, account model.Account) (string, error) {
+func (service *AccountService) FindByID(id string) (*model.Account, error) {
+	return service.db.Find(accountDoc(service.userID, id), nil)
+}
+
+func (service *AccountService) FindByIDWith(id string, tx *firestore.Transaction) (*model.Account, error) {
+	return service.db.Find(accountDoc(service.userID, id), tx)
+}
+
+func (service *AccountService) Create(account model.Account) (string, error) {
 	data, _ := util.MapTo[map[string]interface{}](account)
-	return service.db.Create(accountsDB(userID), data)
+	return service.db.Create(accountsDB(service.userID), data)
 }
 
-func (service *AccountService) Update(userID string, id string, doc map[string]interface{}) (bool, error) {
-	return service.db.Update(accountDoc(userID, id), doc)
+func (service *AccountService) Update(id string, doc map[string]interface{}) (bool, error) {
+	return service.db.Update(accountDoc(service.userID, id), doc)
 }
 
-func (service *AccountService) Delete(userID string, id string) (bool, error) {
-	return service.db.Delete(accountDoc(userID, id))
+func (service *AccountService) Delete(id string) (bool, error) {
+	return service.db.Delete(accountDoc(service.userID, id))
 }

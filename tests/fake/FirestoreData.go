@@ -117,8 +117,9 @@ func NewTransactionEvent(id string, name string, amount float64, amountValue *fl
 		Amount:      data.DoubleValue{Value: util.Pointer(amount)},
 		Currency:    data.StringValue{Value: util.Pointer("CURR")},
 		Category:    data.ArrayValue[string]{Value: &[]string{"One", "Two"}},
-		Date:        data.TimestampValue{Value: util.Pointer(time.Now())},
-		AmountValue: data.DoubleValue{Value: amountValue},
+		Date:        data.TimestampValue{Value: util.Pointer(date)},
+		AmountTo:    data.DoubleValue{Value: amountValue},
+		AmountFrom:  data.DoubleValue{Value: amountValue},
 		AccountTo:   data.ReferenceValue{Reference: accountTo},
 		AccountFrom: data.ReferenceValue{Reference: accountFrom},
 		Budget:      data.ReferenceValue{Reference: budget},
@@ -145,8 +146,11 @@ func NewTransactionEventMap(transaction model.TransactionEvent) map[string]inter
 		"date": map[string]interface{}{
 			"timestampValue": transaction.Date.Value,
 		},
-		"amountValue": map[string]interface{}{
-			"doubleValue": transaction.AmountValue,
+		"amountTo": map[string]interface{}{
+			"doubleValue": transaction.AmountTo,
+		},
+		"amountFrom": map[string]interface{}{
+			"doubleValue": transaction.AmountFrom,
 		},
 		"accountTo": map[string]interface{}{
 			"referenceValue": transaction.AccountTo.Get(),

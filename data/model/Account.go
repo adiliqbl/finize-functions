@@ -2,6 +2,10 @@ package model
 
 import . "finize-functions.app/data"
 
+const (
+	FieldBalance = "balance"
+)
+
 type AccountEvent struct {
 	ID       StringValue    `json:"id"`
 	Name     StringValue    `json:"name"`

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"cloud.google.com/go/firestore"
 	"finize-functions.app/data/model"
 	"finize-functions.app/util"
 	"fmt"
@@ -19,11 +20,15 @@ func userDoc(id string) string {
 }
 
 func NewUserService() UserService {
-	return UserService{db: newFirestoreService[model.User]()}
+	return UserService{db: NewFirestoreService[model.User]()}
 }
 
 func (service *UserService) FindByID(id string) (*model.User, error) {
-	return service.db.Find(userDoc(id))
+	return service.db.Find(userDoc(id), nil)
+}
+
+func (service *UserService) FindByIDWith(id string, tx *firestore.Transaction) (*model.User, error) {
+	return service.db.Find(userDoc(id), tx)
 }
 
 func (service *UserService) Create(user model.User) (string, error) {

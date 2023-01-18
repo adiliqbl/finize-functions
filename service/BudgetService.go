@@ -1,13 +1,15 @@
 package service
 
 import (
+	"cloud.google.com/go/firestore"
 	"finize-functions.app/data/model"
 	"finize-functions.app/util"
 	"fmt"
 )
 
 type BudgetService struct {
-	db FirestoreService[model.Budget]
+	db     FirestoreService[model.Budget]
+	userID string
 }
 
 func budgetsDB(userID string) string {
@@ -18,23 +20,31 @@ func budgetDoc(userID string, id string) string {
 	return fmt.Sprintf("%s/%s", budgetsDB(userID), id)
 }
 
-func NewBudgetService() BudgetService {
-	return BudgetService{db: newFirestoreService[model.Budget]()}
+func NewBudgetService(userId string) BudgetService {
+	return BudgetService{db: NewFirestoreService[model.Budget](), userID: userId}
 }
 
-func (service *BudgetService) FindByID(userID string, id string) (*model.Budget, error) {
-	return service.db.Find(budgetDoc(userID, id))
+func (service *BudgetService) Doc(id string) *firestore.DocumentRef {
+	return service.db.Doc(budgetDoc(service.userID, id))
 }
 
-func (service *BudgetService) Create(userID string, budget model.Budget) (string, error) {
+func (service *BudgetService) FindByID(id string) (*model.Budget, error) {
+	return service.db.Find(budgetDoc(service.userID, id), nil)
+}
+
+func (service *BudgetService) FindByIDWith(id string, tx *firestore.Transaction) (*model.Budget, error) {
+	return service.db.Find(budgetDoc(service.userID, id), tx)
+}
+
+func (service *BudgetService) Create(budget model.Budget) (string, error) {
 	data, _ := util.MapTo[map[string]interface{}](budget)
-	return service.db.Create(budgetsDB(userID), data)
+	return service.db.Create(budgetsDB(service.userID), data)
 }
 
-func (service *BudgetService) Update(userID string, id string, doc map[string]interface{}) (bool, error) {
-	return service.db.Update(budgetDoc(userID, id), doc)
+func (service *BudgetService) Update(id string, doc map[string]interface{}) (bool, error) {
+	return service.db.Update(budgetDoc(service.userID, id), doc)
 }
 
-func (service *BudgetService) Delete(userID string, id string) (bool, error) {
-	return service.db.Delete(budgetDoc(userID, id))
+func (service *BudgetService) Delete(id string) (bool, error) {
+	return service.db.Delete(budgetDoc(service.userID, id))
 }

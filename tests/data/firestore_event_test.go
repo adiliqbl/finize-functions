@@ -26,6 +26,7 @@ func TestParsingDocumentPath(t *testing.T) {
 	assert.Equal(t, "users/userId", path)
 	assert.Equal(t, "users", collection)
 	assert.Equal(t, "userId", doc)
+	assert.Equal(t, "userId", event.UserID())
 
 	// Complex
 	event = data.FirestoreEvent[model.UserEvent]{
@@ -43,5 +44,6 @@ func TestParsingDocumentPath(t *testing.T) {
 
 	assert.Equal(t, "user-transactions/userId/transactions/transactionId", path)
 	assert.Equal(t, "user-transactions", collection)
+	assert.Equal(t, "userId", event.UserID())
 	assert.Equal(t, "userId/transactions/transactionId", doc)
 }

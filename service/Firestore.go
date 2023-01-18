@@ -19,10 +19,15 @@ type Firestore[T any] struct {
 }
 
 type FirestoreService[T any] interface {
-	Find(path string) (*T, error)
+	Find(path string, tx *firestore.Transaction) (*T, error)
 	Create(collection string, doc map[string]interface{}) (string, error)
 	Update(path string, doc map[string]interface{}) (bool, error)
 	Delete(path string) (bool, error)
+
+	Doc(path string) *firestore.DocumentRef
+	Collection(collection string) *firestore.CollectionRef
+	Batch() *firestore.BulkWriter
+	Transaction(run func(tx *firestore.Transaction) error) error
 }
 
 func InitFirestore(ctx context.Context) error {
@@ -44,12 +49,37 @@ func InitFirestore(ctx context.Context) error {
 	return nil
 }
 
-func newFirestoreService[T any]() FirestoreService[T] {
+func NewFirestoreService[T any]() FirestoreService[T] {
 	return &Firestore[T]{client: firestoreDatabase, ctx: context.Background()}
 }
 
-func (store *Firestore[T]) Find(path string) (*T, error) {
-	snap, err := store.client.Doc(path).Get(store.ctx)
+func (store *Firestore[T]) Doc(path string) *firestore.DocumentRef {
+	return store.client.Doc(path)
+}
+
+func (store *Firestore[T]) Collection(path string) *firestore.CollectionRef {
+	return store.client.Collection(path)
+}
+
+func (store *Firestore[T]) Batch() *firestore.BulkWriter {
+	return store.client.BulkWriter(store.ctx)
+}
+
+func (store *Firestore[T]) Transaction(run func(tx *firestore.Transaction) error) error {
+	return store.client.RunTransaction(store.ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		return run(tx)
+	})
+}
+
+func (store *Firestore[T]) Find(path string, tx *firestore.Transaction) (*T, error) {
+	var snap *firestore.DocumentSnapshot
+	var err error
+	if tx == nil {
+		snap, err = store.client.Doc(path).Get(store.ctx)
+	} else {
+		snap, err = tx.Get(store.client.Doc(path))
+	}
+
 	if err != nil {
 		// Translate firestorm not found to application specific not found.
 		if status.Code(err) == codes.NotFound {
