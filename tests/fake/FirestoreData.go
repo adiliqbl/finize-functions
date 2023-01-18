@@ -111,34 +111,46 @@ func NewTransaction(obj model.TransactionEvent) model.Transaction {
 }
 
 func NewTransactionEvent(id string, name string, amount float64, amountValue *float64, date time.Time, accountTo *string, accountFrom *string, budget *string) model.TransactionEvent {
-	return model.TransactionEvent{
-		ID:          data.StringValue{Value: util.Pointer(id)},
-		Name:        data.StringValue{Value: util.Pointer(name)},
-		Amount:      data.DoubleValue{Value: util.Pointer(amount)},
-		Currency:    data.StringValue{Value: util.Pointer("CURR")},
-		Category:    data.ArrayValue[string]{Value: &[]string{"One", "Two"}},
-		Date:        data.TimestampValue{Value: util.Pointer(date)},
-		AmountTo:    data.DoubleValue{Value: amountValue},
-		AmountFrom:  data.DoubleValue{Value: amountValue},
+	transaction := model.TransactionEvent{
+		ID:       data.StringValue{Value: util.Pointer(id)},
+		Name:     data.StringValue{Value: util.Pointer(name)},
+		Category: data.ArrayValue[string]{Value: &[]string{"One", "Two"}},
+		Date:     data.TimestampValue{Value: util.Pointer(date)},
+		Amount: data.MapValue[model.MoneyEvent]{Value: util.Pointer(model.MoneyEvent{
+			Amount:   data.DoubleValue{Value: util.Pointer(amount)},
+			Currency: data.StringValue{Value: util.Pointer("CURR")},
+		})},
+		AmountLocal: data.MapValue[model.MoneyEvent]{Value: util.Pointer(model.MoneyEvent{
+			Amount:   data.DoubleValue{Value: util.Pointer(amount)},
+			Currency: data.StringValue{Value: util.Pointer("CURR")},
+		})},
 		AccountTo:   data.ReferenceValue{Reference: accountTo},
 		AccountFrom: data.ReferenceValue{Reference: accountFrom},
 		Budget:      data.ReferenceValue{Reference: budget},
 	}
+
+	if amountValue != nil {
+		transaction.AmountTo = data.MapValue[model.MoneyEvent]{Value: util.Pointer(model.MoneyEvent{
+			Amount:   data.DoubleValue{Value: amountValue},
+			Currency: data.StringValue{Value: util.Pointer("CURR")},
+		})}
+
+		transaction.AmountFrom = data.MapValue[model.MoneyEvent]{Value: util.Pointer(model.MoneyEvent{
+			Amount:   data.DoubleValue{Value: amountValue},
+			Currency: data.StringValue{Value: util.Pointer("CURR")},
+		})}
+	}
+
+	return transaction
 }
 
 func NewTransactionEventMap(transaction model.TransactionEvent) map[string]interface{} {
-	return map[string]interface{}{
+	doc := map[string]interface{}{
 		"id": map[string]interface{}{
 			"stringValue": transaction.ID.Value,
 		},
 		"name": map[string]interface{}{
 			"stringValue": transaction.Name.Value,
-		},
-		"amount": map[string]interface{}{
-			"doubleValue": transaction.Amount.Value,
-		},
-		"currency": map[string]interface{}{
-			"stringValue": "CURR",
 		},
 		"category": map[string]interface{}{
 			"arrayValue": transaction.Category.Value,
@@ -146,11 +158,25 @@ func NewTransactionEventMap(transaction model.TransactionEvent) map[string]inter
 		"date": map[string]interface{}{
 			"timestampValue": transaction.Date.Value,
 		},
-		"amountTo": map[string]interface{}{
-			"doubleValue": transaction.AmountTo,
+		"amount": map[string]interface{}{
+			"mapValue": map[string]interface{}{
+				"amount": map[string]interface{}{
+					"doubleValue": transaction.Amount.Value.Amount,
+				},
+				"currency": map[string]interface{}{
+					"stringValue": transaction.Amount.Value.Currency,
+				},
+			},
 		},
-		"amountFrom": map[string]interface{}{
-			"doubleValue": transaction.AmountFrom,
+		"amountLocal": map[string]interface{}{
+			"mapValue": map[string]interface{}{
+				"amount": map[string]interface{}{
+					"doubleValue": transaction.AmountLocal.Value.Amount,
+				},
+				"currency": map[string]interface{}{
+					"stringValue": transaction.AmountLocal.Value.Currency,
+				},
+			},
 		},
 		"accountTo": map[string]interface{}{
 			"referenceValue": transaction.AccountTo.Get(),
@@ -162,4 +188,40 @@ func NewTransactionEventMap(transaction model.TransactionEvent) map[string]inter
 			"referenceValue": transaction.Budget.Get(),
 		},
 	}
+
+	if transaction.AmountFrom.Value != nil {
+		doc["amountFrom"] = map[string]interface{}{
+			"mapValue": map[string]interface{}{
+				"amount": map[string]interface{}{
+					"doubleValue": transaction.AmountFrom.Value.Amount,
+				},
+				"currency": map[string]interface{}{
+					"stringValue": transaction.AmountFrom.Value.Currency,
+				},
+			},
+		}
+	} else {
+		doc["amountFrom"] = map[string]interface{}{
+			"mapValue": nil,
+		}
+	}
+
+	if transaction.AmountTo.Value != nil {
+		doc["amountTo"] = map[string]interface{}{
+			"mapValue": map[string]interface{}{
+				"amount": map[string]interface{}{
+					"doubleValue": transaction.AmountTo.Value.Amount,
+				},
+				"currency": map[string]interface{}{
+					"stringValue": transaction.AmountTo.Value.Currency,
+				},
+			},
+		}
+	} else {
+		doc["amountTo"] = map[string]interface{}{
+			"mapValue": nil,
+		}
+	}
+
+	return doc
 }

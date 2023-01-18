@@ -30,18 +30,19 @@ func TestTransactionFromEvent(t *testing.T) {
 
 	assert.Equal(t, "id", want.ID)
 	assert.Equal(t, "name", want.Name)
-	assert.Equal(t, 50.0, want.Amount)
-	assert.Equal(t, 25.0, util.ValueOrNull(want.AmountValue))
+	assert.Equal(t, 50.0, want.Amount.Amount)
+	assert.Equal(t, "CURR", want.Amount.Currency)
+	assert.Equal(t, 25.0, want.AmountTo.Amount)
+	assert.Equal(t, "CURR", want.AmountTo.Currency)
 	assert.Equal(t, "to", util.ValueOrNull(want.AccountTo))
 	assert.True(t, want.AccountFrom == nil)
 	assert.Equal(t, "budget", util.ValueOrNull(want.Budget))
-	assert.Equal(t, "CURR", want.Currency)
 	assert.Equal(t, []string{"One", "Two"}, want.Category)
 
 	got = fake.NewTransactionEvent("id", "name", 50.0, nil, date, util.Pointer("to"), util.Pointer("from"), nil)
 	want, _ = util.MapTo[model.Transaction](got)
 
-	assert.True(t, want.AmountValue == nil)
+	assert.True(t, want.AmountTo == nil)
 	assert.Equal(t, "to", util.ValueOrNull(want.AccountTo))
 	assert.Equal(t, "from", util.ValueOrNull(want.AccountFrom))
 	assert.True(t, want.Budget == nil)

@@ -8,7 +8,7 @@ import (
 type TransactionEvent struct {
 	ID          StringValue          `json:"id"`
 	Name        StringValue          `json:"name"`
-	Amount      Money                `json:"amount"`
+	Amount      MapValue[MoneyEvent] `json:"amount"`
 	AmountTo    MapValue[MoneyEvent] `json:"amountTo,omitempty"`
 	AmountFrom  MapValue[MoneyEvent] `json:"amountFrom,omitempty"`
 	AmountLocal MapValue[MoneyEvent] `json:"amountLocal,omitempty"`

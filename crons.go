@@ -7,3 +7,7 @@ import (
 func CreateRecurringTransaction(ctx context.Context) error {
 	return nil
 }
+
+type Stringer interface {
+	String() string
+}
