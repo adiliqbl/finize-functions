@@ -24,6 +24,10 @@ func accountDoc(userID string, id string) string {
 	return fmt.Sprintf("%s/%s", accountsDB(userID), id)
 }
 
+func NewAccountService(db FirestoreService[model.Account], userID string) AccountService {
+	return &accountServiceImpl{db: db, userID: userID}
+}
+
 func (service *accountServiceImpl) Doc(id string) *firestore.DocumentRef {
 	return service.db.Doc(accountDoc(service.userID, id))
 }

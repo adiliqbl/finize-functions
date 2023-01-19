@@ -24,6 +24,10 @@ func transactionDoc(userID string, id string) string {
 	return fmt.Sprintf("%s/%s", transactionsDB(userID), id)
 }
 
+func NewTransactionService(db FirestoreService[model.Transaction], userID string) TransactionService {
+	return &transactionServiceImpl{db: db, userID: userID}
+}
+
 func (service *transactionServiceImpl) Doc(id string) *firestore.DocumentRef {
 	return service.db.Doc(transactionDoc(service.userID, id))
 }

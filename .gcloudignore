@@ -19,4 +19,7 @@ deploy.sh
 
 /.github
 
+# Firebase
+firebase.json
+
 #!include:.gitignore

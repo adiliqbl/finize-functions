@@ -24,6 +24,10 @@ func budgetDoc(userID string, id string) string {
 	return fmt.Sprintf("%s/%s", budgetsDB(userID), id)
 }
 
+func NewBudgetService(db FirestoreService[model.Budget], userID string) BudgetService {
+	return &budgetServiceImpl{db: db, userID: userID}
+}
+
 func (service *budgetServiceImpl) Doc(id string) *firestore.DocumentRef {
 	return service.db.Doc(budgetDoc(service.userID, id))
 }

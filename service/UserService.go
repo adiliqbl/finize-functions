@@ -23,6 +23,10 @@ func userDoc(id string) string {
 	return fmt.Sprintf("%s/%s", usersDB(), id)
 }
 
+func NewUserService(db FirestoreService[model.User]) UserService {
+	return &userServiceImpl{db: db}
+}
+
 func (service *userServiceImpl) Doc(id string) *firestore.DocumentRef {
 	return service.db.Doc(userDoc(id))
 }

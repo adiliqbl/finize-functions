@@ -3,17 +3,17 @@ package service
 import (
 	"cloud.google.com/go/firestore"
 	"context"
-	"finize-functions.app/config"
 	"finize-functions.app/util"
 	firebase "firebase.google.com/go/v4"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"log"
+	"os"
 )
 
 var firestoreDatabase *firestore.Client
 
-type Firestore[T any] struct {
+type firestoreDB[T any] struct {
 	client *firestore.Client
 	ctx    context.Context
 }
@@ -32,7 +32,7 @@ type FirestoreService[T any] interface {
 
 func InitFirestore(ctx context.Context) error {
 	// Use the application default credentials.
-	conf := &firebase.Config{ProjectID: config.ProjectIdD}
+	conf := &firebase.Config{ProjectID: os.Getenv("GOOGLE_CLOUD_PROJECT")}
 
 	app, err := firebase.NewApp(ctx, conf)
 	if err != nil {
@@ -41,7 +41,7 @@ func InitFirestore(ctx context.Context) error {
 
 	client, err := app.Firestore(ctx)
 	if err != nil {
-		log.Fatalf("app.Firestore: %v", err)
+		log.Fatalf("app.firestoreDB: %v", err)
 		return err
 	}
 
@@ -50,28 +50,32 @@ func InitFirestore(ctx context.Context) error {
 }
 
 func newFirestoreService[T any](ctx context.Context) FirestoreService[T] {
-	return &Firestore[T]{client: firestoreDatabase, ctx: ctx}
+	return &firestoreDB[T]{client: firestoreDatabase, ctx: ctx}
 }
 
-func (store *Firestore[T]) Doc(path string) *firestore.DocumentRef {
+func NewFirestoreService[T any](ctx context.Context, db *firestore.Client) FirestoreService[T] {
+	return &firestoreDB[T]{client: db, ctx: ctx}
+}
+
+func (store *firestoreDB[T]) Doc(path string) *firestore.DocumentRef {
 	return store.client.Doc(path)
 }
 
-func (store *Firestore[T]) Collection(path string) *firestore.CollectionRef {
+func (store *firestoreDB[T]) Collection(path string) *firestore.CollectionRef {
 	return store.client.Collection(path)
 }
 
-func (store *Firestore[T]) Batch() *firestore.BulkWriter {
+func (store *firestoreDB[T]) Batch() *firestore.BulkWriter {
 	return store.client.BulkWriter(store.ctx)
 }
 
-func (store *Firestore[T]) Transaction(run func(tx *firestore.Transaction) error) error {
+func (store *firestoreDB[T]) Transaction(run func(tx *firestore.Transaction) error) error {
 	return store.client.RunTransaction(store.ctx, func(ctx context.Context, tx *firestore.Transaction) error {
 		return run(tx)
 	})
 }
 
-func (store *Firestore[T]) Find(path string, tx *firestore.Transaction) (*T, error) {
+func (store *firestoreDB[T]) Find(path string, tx *firestore.Transaction) (*T, error) {
 	var snap *firestore.DocumentSnapshot
 	var err error
 	if tx == nil {
@@ -92,30 +96,30 @@ func (store *Firestore[T]) Find(path string, tx *firestore.Transaction) (*T, err
 	return &document, err
 }
 
-func (store *Firestore[T]) Create(collection string, doc map[string]interface{}) (string, error) {
+func (store *firestoreDB[T]) Create(collection string, doc map[string]interface{}) (string, error) {
 	ref := store.client.Collection(collection).NewDoc()
 	doc["id"] = ref.ID
 
 	_, err := ref.Set(store.ctx, doc)
 	if err != nil {
-		log.Fatalf("Firestore.Create: %v", err)
+		log.Fatalf("firestoreDB.Create: %v", err)
 		return "", err
 	}
 
 	return ref.ID, nil
 }
 
-func (store *Firestore[T]) Update(path string, doc map[string]interface{}) (bool, error) {
+func (store *firestoreDB[T]) Update(path string, doc map[string]interface{}) (bool, error) {
 	_, err := store.client.Doc(path).Set(store.ctx, doc, firestore.MergeAll)
 	if err != nil {
-		log.Fatalf("Firestore.Create: %v", err)
+		log.Fatalf("firestoreDB.Create: %v", err)
 		return false, err
 	}
 
 	return true, nil
 }
 
-func (store *Firestore[T]) Delete(path string) (bool, error) {
+func (store *firestoreDB[T]) Delete(path string) (bool, error) {
 	_, err := store.client.Doc(path).Delete(store.ctx)
 	if err != nil {
 		// Translate firestorm not found to application specific not found.
