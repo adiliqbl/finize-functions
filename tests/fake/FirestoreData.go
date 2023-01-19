@@ -18,9 +18,9 @@ func NewUser(obj model.UserEvent) model.User {
 
 func NewUserEvent(id string, name string, email string) model.UserEvent {
 	return model.UserEvent{
-		ID:    data.StringValue{Value: util.Pointer(id)},
-		Name:  data.StringValue{Value: util.Pointer(name)},
-		Email: data.StringValue{Value: util.Pointer(email)},
+		ID:    data.StringValue{Value: &id},
+		Name:  data.StringValue{Value: &name},
+		Email: data.StringValue{Value: &email},
 	}
 }
 
@@ -44,9 +44,9 @@ func NewBudget(obj model.BudgetEvent) model.Budget {
 
 func NewBudgetEvent(id string, name string, limit float64, spent float64) model.BudgetEvent {
 	return model.BudgetEvent{
-		ID:    data.StringValue{Value: util.Pointer(id)},
-		Name:  data.StringValue{Value: util.Pointer(name)},
-		Limit: data.DoubleValue{Value: util.Pointer(limit)},
+		ID:    data.StringValue{Value: &id},
+		Name:  data.StringValue{Value: &name},
+		Limit: data.DoubleValue{Value: &limit},
 		Spent: data.DoubleValue{Value: &spent},
 	}
 }
@@ -74,9 +74,9 @@ func NewAccount(obj model.AccountEvent) model.Account {
 
 func NewAccountEvent(id string, name string, balance float64, budget *string) model.AccountEvent {
 	return model.AccountEvent{
-		ID:       data.StringValue{Value: util.Pointer(id)},
-		Name:     data.StringValue{Value: util.Pointer(name)},
-		Balance:  data.DoubleValue{Value: util.Pointer(balance)},
+		ID:       data.StringValue{Value: &id},
+		Name:     data.StringValue{Value: &name},
+		Balance:  data.DoubleValue{Value: &balance},
 		Currency: data.StringValue{Value: util.Pointer("CURR")},
 		Type:     data.StringValue{Value: util.Pointer("type")},
 		Budget:   data.ReferenceValue{Reference: budget},
@@ -101,7 +101,7 @@ func NewAccountEventMap(account model.AccountEvent) map[string]interface{} {
 			"stringValue": account.Currency.Value,
 		},
 		"budget": map[string]interface{}{
-			"referenceValue": util.ValueOrNull(account.Budget.Get()),
+			"stringValue": util.ValueOrNull(account.Budget.Get()),
 		},
 	}
 }
@@ -110,18 +110,26 @@ func NewTransaction(obj model.TransactionEvent) model.Transaction {
 	return mapTo[model.Transaction](obj)
 }
 
-func NewTransactionEvent(id string, name string, amount float64, amountValue *float64, date time.Time, accountTo *string, accountFrom *string, budget *string) model.TransactionEvent {
+func NewTransactionEvent(id string, name string, amount float64, amountLocal float64, amountValue float64, date time.Time, accountTo *string, accountFrom *string, budget *string) model.TransactionEvent {
 	transaction := model.TransactionEvent{
-		ID:       data.StringValue{Value: util.Pointer(id)},
-		Name:     data.StringValue{Value: util.Pointer(name)},
+		ID:       data.StringValue{Value: &id},
+		Name:     data.StringValue{Value: &name},
 		Category: data.ArrayValue[string]{Value: &[]string{"One", "Two"}},
-		Date:     data.TimestampValue{Value: util.Pointer(date)},
+		Date:     data.TimestampValue{Value: &date},
 		Amount: data.MapValue[model.MoneyEvent]{Value: util.Pointer(model.MoneyEvent{
-			Amount:   data.DoubleValue{Value: util.Pointer(amount)},
+			Amount:   data.DoubleValue{Value: &amount},
 			Currency: data.StringValue{Value: util.Pointer("CURR")},
 		})},
 		AmountLocal: data.MapValue[model.MoneyEvent]{Value: util.Pointer(model.MoneyEvent{
-			Amount:   data.DoubleValue{Value: util.Pointer(amount)},
+			Amount:   data.DoubleValue{Value: &amountLocal},
+			Currency: data.StringValue{Value: util.Pointer("CURR")},
+		})},
+		AmountTo: data.MapValue[model.MoneyEvent]{Value: util.Pointer(model.MoneyEvent{
+			Amount:   data.DoubleValue{Value: &amountValue},
+			Currency: data.StringValue{Value: util.Pointer("CURR")},
+		})},
+		AmountFrom: data.MapValue[model.MoneyEvent]{Value: util.Pointer(model.MoneyEvent{
+			Amount:   data.DoubleValue{Value: &amountValue},
 			Currency: data.StringValue{Value: util.Pointer("CURR")},
 		})},
 		AccountTo:   data.ReferenceValue{Reference: accountTo},
@@ -129,14 +137,16 @@ func NewTransactionEvent(id string, name string, amount float64, amountValue *fl
 		Budget:      data.ReferenceValue{Reference: budget},
 	}
 
-	if amountValue != nil {
-		transaction.AmountTo = data.MapValue[model.MoneyEvent]{Value: util.Pointer(model.MoneyEvent{
-			Amount:   data.DoubleValue{Value: amountValue},
+	if accountFrom != nil {
+		transaction.AmountFrom = data.MapValue[model.MoneyEvent]{Value: util.Pointer(model.MoneyEvent{
+			Amount:   data.DoubleValue{Value: &amountValue},
 			Currency: data.StringValue{Value: util.Pointer("CURR")},
 		})}
+	}
 
-		transaction.AmountFrom = data.MapValue[model.MoneyEvent]{Value: util.Pointer(model.MoneyEvent{
-			Amount:   data.DoubleValue{Value: amountValue},
+	if accountTo != nil {
+		transaction.AmountTo = data.MapValue[model.MoneyEvent]{Value: util.Pointer(model.MoneyEvent{
+			Amount:   data.DoubleValue{Value: &amountValue},
 			Currency: data.StringValue{Value: util.Pointer("CURR")},
 		})}
 	}
@@ -178,14 +188,34 @@ func NewTransactionEventMap(transaction model.TransactionEvent) map[string]inter
 				},
 			},
 		},
+		"amountFrom": map[string]interface{}{
+			"mapValue": map[string]interface{}{
+				"amount": map[string]interface{}{
+					"doubleValue": transaction.AmountFrom.Value.Amount,
+				},
+				"currency": map[string]interface{}{
+					"stringValue": transaction.AmountFrom.Value.Currency,
+				},
+			},
+		},
+		"amountTo": map[string]interface{}{
+			"mapValue": map[string]interface{}{
+				"amount": map[string]interface{}{
+					"doubleValue": transaction.AmountTo.Value.Amount,
+				},
+				"currency": map[string]interface{}{
+					"stringValue": transaction.AmountTo.Value.Currency,
+				},
+			},
+		},
 		"accountTo": map[string]interface{}{
-			"referenceValue": transaction.AccountTo.Get(),
+			"stringValue": transaction.AccountTo.Get(),
 		},
 		"accountFrom": map[string]interface{}{
-			"referenceValue": transaction.AccountFrom.Get(),
+			"stringValue": transaction.AccountFrom.Get(),
 		},
 		"budget": map[string]interface{}{
-			"referenceValue": transaction.Budget.Get(),
+			"stringValue": transaction.Budget.Get(),
 		},
 	}
 

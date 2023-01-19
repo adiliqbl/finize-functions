@@ -2,19 +2,21 @@ package service
 
 import (
 	"context"
+	services "finize-functions.app/service"
 	"finize-functions.app/tests/fake"
 	"fmt"
 	"os"
 	"testing"
 )
 
+var userService services.UserService
+var budgetService services.BudgetService
+var accountService services.AccountService
+var transactionService services.TransactionService
+
 func setup() {
-	err := fake.InitTestFirestore(context.Background())
-	if err != nil {
-		fmt.Printf("\033[1;33m%s\033[0m", "> Failed to initialize Firestore\n")
-		os.Exit(0)
-		return
-	}
+	setupFirestore()
+
 	fmt.Printf("\033[1;33m%s\033[0m", "> Setup completed\n")
 }
 
@@ -27,4 +29,18 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 	teardown()
 	os.Exit(code)
+}
+
+func setupFirestore() {
+	if userService != nil {
+		return
+	}
+
+	fake.InitTestFirestore()
+
+	factory := fake.NewServiceFactory(context.Background(), "test-user")
+	userService = factory.UserService()
+	budgetService = factory.BudgetService()
+	accountService = factory.AccountService()
+	transactionService = factory.TransactionService()
 }

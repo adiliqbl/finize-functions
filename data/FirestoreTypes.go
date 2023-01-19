@@ -63,7 +63,7 @@ func (it MapValue[T]) MarshalJSON() ([]byte, error) {
 }
 
 type ReferenceValue struct {
-	Reference *string `json:"referenceValue,omitempty"`
+	Reference *string `json:"stringValue,omitempty"`
 }
 
 func (it ReferenceValue) Get() *string {

@@ -2,6 +2,7 @@ package functions
 
 import (
 	"cloud.google.com/go/firestore"
+	"finize-functions.app/data"
 	"finize-functions.app/data/model"
 	"finize-functions.app/service"
 	"finize-functions.app/util"
@@ -14,6 +15,8 @@ func OnTransactionCreated(factory service.Factory, transaction model.Transaction
 	budgets := factory.BudgetService()
 
 	return store.Transaction(func(tx *firestore.Transaction) error {
+		var ops []data.TransactionOperation
+
 		if !util.NullOrEmpty(transaction.AccountTo) {
 			budget, err := budgets.FindByIDWith(*transaction.Budget, tx)
 			if err != nil {
@@ -21,16 +24,13 @@ func OnTransactionCreated(factory service.Factory, transaction model.Transaction
 			}
 			budget.Spent = budget.Spent + transaction.AmountLocal.Amount
 
-			doc := budgets.Doc(budget.ID)
-			err = tx.Update(doc, []firestore.Update{{
-				Path:  model.FieldSpent,
-				Value: budget.Spent,
-			}})
-
-			if err != nil {
-				log.Fatalf("BudgetTransaction.Update: %v", err)
-				return err
-			}
+			ops = append(ops, data.TransactionOperation{
+				Ref: budgets.Doc(budget.ID),
+				Data: []firestore.Update{{
+					Path:  model.FieldSpent,
+					Value: budget.Spent,
+				}},
+			})
 		}
 
 		if !util.NullOrEmpty(transaction.AccountFrom) {
@@ -40,16 +40,13 @@ func OnTransactionCreated(factory service.Factory, transaction model.Transaction
 			}
 			accountFrom.Balance = accountFrom.Balance - transaction.AmountFrom.Amount
 
-			doc := accounts.Doc(accountFrom.ID)
-			err = tx.Update(doc, []firestore.Update{{
-				Path:  model.FieldBalance,
-				Value: accountFrom.Balance,
-			}})
-
-			if err != nil {
-				log.Fatalf("AccountTransaction.Update: %v", err)
-				return err
-			}
+			ops = append(ops, data.TransactionOperation{
+				Ref: accounts.Doc(accountFrom.ID),
+				Data: []firestore.Update{{
+					Path:  model.FieldBalance,
+					Value: accountFrom.Balance,
+				}},
+			})
 		}
 
 		if !util.NullOrEmpty(transaction.Budget) {
@@ -59,18 +56,15 @@ func OnTransactionCreated(factory service.Factory, transaction model.Transaction
 			}
 			accountTo.Balance = accountTo.Balance - transaction.AmountTo.Amount
 
-			doc := accounts.Doc(accountTo.ID)
-			err = tx.Update(doc, []firestore.Update{{
-				Path:  model.FieldBalance,
-				Value: accountTo.Balance,
-			}})
-
-			if err != nil {
-				log.Fatalf("AccountTransaction.Update: %v", err)
-				return err
-			}
+			ops = append(ops, data.TransactionOperation{
+				Ref: accounts.Doc(accountTo.ID),
+				Data: []firestore.Update{{
+					Path:  model.FieldBalance,
+					Value: accountTo.Balance,
+				}},
+			})
 		}
 
-		return nil
+		return data.Commit(tx, ops)
 	})
 }
