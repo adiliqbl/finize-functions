@@ -3,45 +3,87 @@ package service
 import (
 	"cloud.google.com/go/firestore"
 	"context"
-	"finize-functions/config"
-	"finize-functions/util"
+	"finize-functions.app/util"
 	firebase "firebase.google.com/go/v4"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"log"
+	"os"
 )
 
-type Firestore[T any] struct {
+var firestoreDatabase *firestore.Client
+
+type firestoreDB[T any] struct {
 	client *firestore.Client
 	ctx    context.Context
 }
 
-func NewFirestore[T any]() (*Firestore[T], error) {
-	store := new(Firestore[T])
+type FirestoreService[T any] interface {
+	Find(path string, tx *firestore.Transaction) (*T, error)
+	Create(collection string, doc map[string]interface{}) (string, error)
+	Update(path string, doc map[string]interface{}) (bool, error)
+	Delete(path string) (bool, error)
 
+	Doc(path string) *firestore.DocumentRef
+	Collection(collection string) *firestore.CollectionRef
+	Batch() *firestore.BulkWriter
+	Transaction(run func(tx *firestore.Transaction) error) error
+}
+
+func InitFirestore(ctx context.Context) error {
 	// Use the application default credentials.
-	conf := &firebase.Config{ProjectID: config.ProjectIdD}
+	conf := &firebase.Config{ProjectID: os.Getenv("GOOGLE_CLOUD_PROJECT")}
 
-	// Use context.Background() because the app/client should persist across
-	// invocations.
-	ctx := context.Background()
-	store.ctx = ctx
-
-	app, err := firebase.NewApp(store.ctx, conf)
+	app, err := firebase.NewApp(ctx, conf)
 	if err != nil {
 		log.Fatalf("firebase.NewApp: %v", err)
 	}
 
-	store.client, err = app.Firestore(store.ctx)
+	client, err := app.Firestore(ctx)
 	if err != nil {
-		log.Fatalf("app.Firestore: %v", err)
+		log.Fatalf("app.firestoreDB: %v", err)
+		return err
 	}
 
-	return store, nil
+	firestoreDatabase = client
+	return nil
 }
 
-func (store *Firestore[T]) FindByID(path string) (*T, error) {
-	snap, err := store.client.Doc(path).Get(store.ctx)
+func newFirestoreService[T any](ctx context.Context) FirestoreService[T] {
+	return &firestoreDB[T]{client: firestoreDatabase, ctx: ctx}
+}
+
+func NewFirestoreService[T any](ctx context.Context, db *firestore.Client) FirestoreService[T] {
+	return &firestoreDB[T]{client: db, ctx: ctx}
+}
+
+func (store *firestoreDB[T]) Doc(path string) *firestore.DocumentRef {
+	return store.client.Doc(path)
+}
+
+func (store *firestoreDB[T]) Collection(path string) *firestore.CollectionRef {
+	return store.client.Collection(path)
+}
+
+func (store *firestoreDB[T]) Batch() *firestore.BulkWriter {
+	return store.client.BulkWriter(store.ctx)
+}
+
+func (store *firestoreDB[T]) Transaction(run func(tx *firestore.Transaction) error) error {
+	return store.client.RunTransaction(store.ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		return run(tx)
+	})
+}
+
+func (store *firestoreDB[T]) Find(path string, tx *firestore.Transaction) (*T, error) {
+	var snap *firestore.DocumentSnapshot
+	var err error
+	if tx == nil {
+		snap, err = store.client.Doc(path).Get(store.ctx)
+	} else {
+		snap, err = tx.Get(store.client.Doc(path))
+	}
+
 	if err != nil {
 		// Translate firestorm not found to application specific not found.
 		if status.Code(err) == codes.NotFound {
@@ -50,43 +92,34 @@ func (store *Firestore[T]) FindByID(path string) (*T, error) {
 		return nil, err
 	}
 
-	return util.FromDocument[T](snap.Data())
+	document, err := util.MapTo[T](snap.Data())
+	return &document, err
 }
 
-func (store *Firestore[T]) Create(collection string, data T) (interface{}, error) {
-	doc, err := util.ToDocument(data)
-	if err != nil {
-		return nil, err
-	}
-
+func (store *firestoreDB[T]) Create(collection string, doc map[string]interface{}) (string, error) {
 	ref := store.client.Collection(collection).NewDoc()
 	doc["id"] = ref.ID
 
-	_, err = ref.Set(store.ctx, doc)
+	_, err := ref.Set(store.ctx, doc)
 	if err != nil {
-		log.Fatalf("Firestore.Create: %v", err)
-		return nil, err
+		log.Fatalf("firestoreDB.Create: %v", err)
+		return "", err
 	}
 
 	return ref.ID, nil
 }
 
-func (store *Firestore[T]) Update(path string, data T) (bool, error) {
-	doc, err := util.ToDocument(data)
+func (store *firestoreDB[T]) Update(path string, doc map[string]interface{}) (bool, error) {
+	_, err := store.client.Doc(path).Set(store.ctx, doc, firestore.MergeAll)
 	if err != nil {
-		return false, err
-	}
-
-	_, err = store.client.Doc(path).Set(store.ctx, doc, firestore.MergeAll)
-	if err != nil {
-		log.Fatalf("Firestore.Create: %v", err)
+		log.Fatalf("firestoreDB.Create: %v", err)
 		return false, err
 	}
 
 	return true, nil
 }
 
-func (store *Firestore[T]) DeleteByID(path string) (bool, error) {
+func (store *firestoreDB[T]) Delete(path string) (bool, error) {
 	_, err := store.client.Doc(path).Delete(store.ctx)
 	if err != nil {
 		// Translate firestorm not found to application specific not found.

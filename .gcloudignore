@@ -13,6 +13,13 @@
 .git
 .gitignore
 
-/test
+/tests
+README.md
+deploy.sh
+
+/.github
+
+# Firebase
+firebase.json
 
 #!include:.gitignore
