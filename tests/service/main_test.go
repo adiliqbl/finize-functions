@@ -15,6 +15,7 @@ var eventService services.EventService
 var budgetService services.BudgetService
 var accountService services.AccountService
 var transactionService services.TransactionService
+var exchangeRateService services.ExchangeRateService
 
 func setup() {
 	setupFirestore()
@@ -47,4 +48,5 @@ func setupFirestore() {
 	budgetService = factory.BudgetService()
 	accountService = factory.AccountService()
 	transactionService = factory.TransactionService()
+	exchangeRateService = factory.ExchangeRateService()
 }

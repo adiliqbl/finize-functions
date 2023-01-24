@@ -38,3 +38,7 @@ func (p *serviceProvider) BudgetService() service.BudgetService {
 func (p *serviceProvider) TransactionService() service.TransactionService {
 	return service.NewTransactionService(NewFirestoreService[model.Transaction](p.ctx), p.userID)
 }
+
+func (p *serviceProvider) ExchangeRateService() service.ExchangeRateService {
+	return service.NewExchangeRateService(NewFirestoreService[map[string]interface{}](p.ctx))
+}
