@@ -3,6 +3,8 @@ package service
 import (
 	"cloud.google.com/go/firestore"
 	"context"
+	"finize-functions.app/data"
+	"finize-functions.app/data/model"
 	"finize-functions.app/util"
 	firebase "firebase.google.com/go/v4"
 	"google.golang.org/grpc/codes"
@@ -14,8 +16,9 @@ import (
 var firestoreDatabase *firestore.Client
 
 type firestoreDB[T any] struct {
-	client *firestore.Client
-	ctx    context.Context
+	client  *firestore.Client
+	ctx     context.Context
+	eventID string
 }
 
 type FirestoreService[T any] interface {
@@ -26,8 +29,8 @@ type FirestoreService[T any] interface {
 
 	Doc(path string) *firestore.DocumentRef
 	Collection(collection string) *firestore.CollectionRef
-	Batch() *firestore.BulkWriter
-	Transaction(run func(tx *firestore.Transaction) error) error
+	Batch(run func(batch *firestore.BulkWriter) []data.TransactionOperation) error
+	Transaction(run func(tx *firestore.Transaction) []data.TransactionOperation) error
 }
 
 func InitFirestore(ctx context.Context) error {
@@ -49,12 +52,12 @@ func InitFirestore(ctx context.Context) error {
 	return nil
 }
 
-func newFirestoreService[T any](ctx context.Context) FirestoreService[T] {
-	return &firestoreDB[T]{client: firestoreDatabase, ctx: ctx}
+func newFirestoreService[T any](ctx context.Context, eventID string) FirestoreService[T] {
+	return &firestoreDB[T]{client: firestoreDatabase, ctx: ctx, eventID: eventID}
 }
 
-func NewFirestoreService[T any](ctx context.Context, db *firestore.Client) FirestoreService[T] {
-	return &firestoreDB[T]{client: db, ctx: ctx}
+func NewFirestoreService[T any](ctx context.Context, db *firestore.Client, eventID string) FirestoreService[T] {
+	return &firestoreDB[T]{client: db, ctx: ctx, eventID: eventID}
 }
 
 func (store *firestoreDB[T]) Doc(path string) *firestore.DocumentRef {
@@ -65,13 +68,28 @@ func (store *firestoreDB[T]) Collection(path string) *firestore.CollectionRef {
 	return store.client.Collection(path)
 }
 
-func (store *firestoreDB[T]) Batch() *firestore.BulkWriter {
-	return store.client.BulkWriter(store.ctx)
+func (store *firestoreDB[T]) Batch(run func(batch *firestore.BulkWriter) []data.TransactionOperation) error {
+	batch := store.client.BulkWriter(store.ctx)
+	ops := run(batch)
+
+	events := NewEventService(NewFirestoreService[model.Event](store.ctx, store.client, store.eventID), store.eventID)
+	if err := events.SetProcessedInBatch(batch); err != nil {
+		return err
+	}
+
+	return data.Perform(batch, ops)
 }
 
-func (store *firestoreDB[T]) Transaction(run func(tx *firestore.Transaction) error) error {
+func (store *firestoreDB[T]) Transaction(run func(tx *firestore.Transaction) []data.TransactionOperation) error {
 	return store.client.RunTransaction(store.ctx, func(ctx context.Context, tx *firestore.Transaction) error {
-		return run(tx)
+		ops := run(tx)
+
+		events := NewEventService(NewFirestoreService[model.Event](store.ctx, store.client, store.eventID), store.eventID)
+		if err := events.SetProcessed(tx); err != nil {
+			return err
+		}
+
+		return data.Commit(tx, ops)
 	})
 }
 

@@ -8,14 +8,14 @@ import (
 )
 
 func TestCreateBudget(t *testing.T) {
-	id, err := budgetService.Create(fake.NewBudget(fake.NewBudgetEvent("", "name", 50.0, 10.0)))
+	id, err := budgetService.Create(fake.NewBudget(fake.NewBudgetEvent("", "name", 50.0)))
 
 	assert.Nil(t, err)
 	assert.True(t, !util.NullOrEmpty(&id))
 }
 
 func TestGetBudget(t *testing.T) {
-	testBudget := fake.NewBudget(fake.NewBudgetEvent("", "name", 50.0, 10.0))
+	testBudget := fake.NewBudget(fake.NewBudgetEvent("", "name", 50.0))
 	testBudget.ID, _ = budgetService.Create(testBudget)
 
 	budget, _ := budgetService.FindByID(testBudget.ID)

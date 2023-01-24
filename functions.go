@@ -1,6 +1,7 @@
 package finize_functions
 
 import (
+	"cloud.google.com/go/functions/metadata"
 	"context"
 	"finize-functions.app/data"
 	"finize-functions.app/data/model"
@@ -10,43 +11,74 @@ import (
 	"log"
 )
 
+func init() {
+	if err := service.InitFirestore(context.Background()); err != nil {
+		log.Fatalf("Failed to initialize Firestore %v", err)
+	}
+}
+
 //goland:noinspection GoUnusedExportedFunction,GoUnusedParameter
 func OnTransactionCreated(ctx context.Context, e data.FirestoreEvent[model.TransactionEvent]) error {
-	if err := service.InitFirestore(context.Background()); err != nil {
-		log.Fatalf("Failed to initialize Firestore %v", e.Value)
+	meta, err := metadata.FromContext(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get metadata %v", err)
 	}
+
+	factory := service.NewServiceFactory(ctx, meta.EventID, e.UserID())
+	if factory.EventService().IsProcessed() {
+		return nil
+	}
+
 	transaction, err := util.MapTo[model.Transaction](e.Value.Data)
 	if err != nil {
-		log.Fatalf("Failed to parse transaction %v", e.Value)
+		log.Fatalf("Failed to parse transaction %v", err)
 	}
-	return functions.OnTransactionCreated(service.NewServiceFactory(context.Background(), e.UserID()), transaction)
+	return functions.OnTransactionCreated(factory, transaction)
 }
 
 //goland:noinspection GoUnusedExportedFunction,GoUnusedParameter
 func OnTransactionUpdated(ctx context.Context, e data.FirestoreEvent[model.TransactionEvent]) error {
-	if err := service.InitFirestore(context.Background()); err != nil {
-		log.Fatalf("Failed to initialize Firestore %v", e.Value)
+	meta, err := metadata.FromContext(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get metadata %v", err)
 	}
+
+	factory := service.NewServiceFactory(ctx, meta.EventID, e.UserID())
+	if factory.EventService().IsProcessed() {
+		return nil
+	}
+
 	transactionOld, err := util.MapTo[model.Transaction](e.OldValue.Data)
 	transactionNew, err2 := util.MapTo[model.Transaction](e.Value.Data)
 	if err != nil || err2 != nil {
-		log.Fatalf("Failed to parse transaction %v", e.Value)
+		log.Fatalf("Failed to parse transaction %v", err)
 	}
-	return functions.OnTransactionUpdated(service.NewServiceFactory(context.Background(), e.UserID()), transactionOld, transactionNew, e.UpdateMask.Fields)
+	return functions.OnTransactionUpdated(factory, transactionOld, transactionNew, e.UpdateMask.Fields)
 }
 
 //goland:noinspection GoUnusedExportedFunction,GoUnusedParameter
 func OnTransactionDeleted(ctx context.Context, e data.FirestoreEvent[model.TransactionEvent]) error {
-	_ = service.InitFirestore(context.Background())
+	meta, err := metadata.FromContext(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get metadata %v", err)
+	}
+
+	factory := service.NewServiceFactory(ctx, meta.EventID, e.UserID())
+	if factory.EventService().IsProcessed() {
+		return nil
+	}
+
 	transaction, err := util.MapTo[model.Transaction](e.OldValue.Data)
 	if err != nil {
-		log.Fatalf("Failed to parse transaction %v", e.Value)
+		log.Fatalf("Failed to parse transaction %v", err)
 	}
-	return functions.OnTransactionDeleted(service.NewServiceFactory(context.Background(), e.UserID()), transaction)
+	return functions.OnTransactionDeleted(factory, transaction)
 }
 
 //goland:noinspection GoUnusedExportedFunction,GoUnusedParameter
 func GetExchangeRate(ctx context.Context) error {
-	_ = service.InitFirestore(context.Background())
+	if err := service.InitFirestore(context.Background()); err != nil {
+		log.Fatalf("Failed to initialize Firestore %v", err)
+	}
 	return nil
 }

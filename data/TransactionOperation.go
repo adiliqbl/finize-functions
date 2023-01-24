@@ -28,3 +28,22 @@ func Commit(tx *firestore.Transaction, ops []TransactionOperation) error {
 
 	return nil
 }
+
+func Perform(batch *firestore.BulkWriter, ops []TransactionOperation) error {
+	for _, operation := range ops {
+		var err error
+		if _, ok := operation.Data.([]firestore.Update); ok {
+			_, err = batch.Update(operation.Ref, operation.Data.([]firestore.Update))
+		} else if operation.Create {
+			_, err = batch.Create(operation.Ref, operation.Data)
+		} else {
+			_, err = batch.Set(operation.Ref, operation.Data)
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

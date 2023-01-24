@@ -18,7 +18,7 @@ gcloud functions deploy TransactionUpdated \
   --retry
 
 gcloud functions deploy TransactionDeleted \
-  --entry-point "OnTransactionUpdated" \
+  --entry-point "OnTransactionDeleted" \
   --runtime "$RUNTIME" \
   --trigger-event "providers/cloud.firestore/eventTypes/document.delete" \
   --trigger-resource "projects/$PROJECT_ID/databases/(default)/documents/user-transactions/{userId}/transactions/{transactionId}" \

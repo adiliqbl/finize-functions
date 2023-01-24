@@ -6,31 +6,35 @@ import (
 	"finize-functions.app/service"
 )
 
-type provider struct {
+type serviceProvider struct {
 	ctx    context.Context
 	userID string
 }
 
 func NewServiceFactory(ctx context.Context, userID string) service.Factory {
-	return &provider{ctx: ctx, userID: userID}
+	return &serviceProvider{ctx: ctx, userID: userID}
 }
 
-func (p *provider) FirestoreService() service.FirestoreService[model.Entity] {
-	return NewFirestoreService[model.Entity](p.ctx)
+func (p *serviceProvider) FirestoreService() service.FirestoreService[map[string]interface{}] {
+	return NewFirestoreService[map[string]interface{}](p.ctx)
 }
 
-func (p *provider) UserService() service.UserService {
+func (p *serviceProvider) EventService() service.EventService {
+	return service.NewEventService(NewFirestoreService[model.Event](p.ctx), "event")
+}
+
+func (p *serviceProvider) UserService() service.UserService {
 	return service.NewUserService(NewFirestoreService[model.User](p.ctx))
 }
 
-func (p *provider) AccountService() service.AccountService {
+func (p *serviceProvider) AccountService() service.AccountService {
 	return service.NewAccountService(NewFirestoreService[model.Account](p.ctx), p.userID)
 }
 
-func (p *provider) BudgetService() service.BudgetService {
+func (p *serviceProvider) BudgetService() service.BudgetService {
 	return service.NewBudgetService(NewFirestoreService[model.Budget](p.ctx), p.userID)
 }
 
-func (p *provider) TransactionService() service.TransactionService {
+func (p *serviceProvider) TransactionService() service.TransactionService {
 	return service.NewTransactionService(NewFirestoreService[model.Transaction](p.ctx), p.userID)
 }

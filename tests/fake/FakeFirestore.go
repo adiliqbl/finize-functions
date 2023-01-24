@@ -32,14 +32,12 @@ func InitTestFirestore() {
 	)
 	if err != nil {
 		log.Fatalf("firebase.NewApp: %v", err)
-		os.Exit(0)
 		return
 	}
 
 	client, err := app.Firestore(ctx)
 	if err != nil {
 		log.Fatalf("app.firestoreDB: %v", err)
-		os.Exit(0)
 		return
 	}
 
@@ -48,5 +46,5 @@ func InitTestFirestore() {
 }
 
 func NewFirestoreService[T any](ctx context.Context) service.FirestoreService[T] {
-	return service.NewFirestoreService[T](ctx, testFirestoreDatabase)
+	return service.NewFirestoreService[T](ctx, testFirestoreDatabase, "event")
 }

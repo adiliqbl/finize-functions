@@ -13,7 +13,7 @@ import (
 func OnTransactionCreated(factory service.Factory, transaction model.Transaction) error {
 	accounts := factory.AccountService()
 
-	return factory.FirestoreService().Transaction(func(tx *firestore.Transaction) error {
+	return factory.FirestoreService().Transaction(func(tx *firestore.Transaction) []data.TransactionOperation {
 		var ops []data.TransactionOperation
 
 		if !util.NullOrEmpty(transaction.AccountFrom) {
@@ -48,7 +48,7 @@ func OnTransactionCreated(factory service.Factory, transaction model.Transaction
 			})
 		}
 
-		return data.Commit(tx, ops)
+		return ops
 	})
 }
 
@@ -64,7 +64,7 @@ func OnTransactionUpdated(factory service.Factory, oldTransaction model.Transact
 
 	accounts := factory.AccountService()
 
-	return factory.FirestoreService().Transaction(func(tx *firestore.Transaction) error {
+	return factory.FirestoreService().Transaction(func(tx *firestore.Transaction) []data.TransactionOperation {
 		mAccounts := map[string]model.Account{}
 
 		if oldTransaction.AccountFrom != nil {
@@ -131,14 +131,14 @@ func OnTransactionUpdated(factory service.Factory, oldTransaction model.Transact
 			})
 		}
 
-		return data.Commit(tx, ops)
+		return ops
 	})
 }
 
 func OnTransactionDeleted(factory service.Factory, transaction model.Transaction) error {
 	accounts := factory.AccountService()
 
-	return factory.FirestoreService().Transaction(func(tx *firestore.Transaction) error {
+	return factory.FirestoreService().Transaction(func(tx *firestore.Transaction) []data.TransactionOperation {
 		var ops []data.TransactionOperation
 
 		if transaction.AccountFrom != nil {
@@ -173,6 +173,6 @@ func OnTransactionDeleted(factory service.Factory, transaction model.Transaction
 			})
 		}
 
-		return data.Commit(tx, ops)
+		return ops
 	})
 }
