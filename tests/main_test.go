@@ -43,7 +43,7 @@ func setupFirestore() {
 	userID, err := factory.UserService().Create(fake.NewUser(fake.NewUserEvent("", "name", "email@test.com")))
 	ExitOnError(err, "Failed to create user")
 
-	testFactory = fake.NewServiceFactory(context.Background(), userID)
+	testFactory = fake.NewServiceFactory(context.Background(), *userID)
 	userService = testFactory.UserService()
 	budgetService = testFactory.BudgetService()
 	accountService = testFactory.AccountService()

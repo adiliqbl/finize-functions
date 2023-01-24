@@ -1,17 +1,14 @@
 name: Deploy Function
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  workflow_run:
+    workflows: [ test ]
+    types: [ completed ]
     branches:
       - main
 
 jobs:
   deploy:
-    needs: test
-
     runs-on: ubuntu-latest
 
     # Add "id-token" with the intended permissions.
@@ -42,5 +39,5 @@ jobs:
 
       - name: 'Deploy Functions'
         run:
-          chmod 766 deploy.sh
+          chmod +x deploy.sh
           ./deploy ${{ secrets.PROJECT_ID }}

@@ -9,6 +9,7 @@ import (
 
 type AccountService interface {
 	BaseService[model.Account]
+	Doc(id string) *firestore.DocumentRef
 }
 
 type accountServiceImpl struct {
@@ -32,17 +33,13 @@ func (service *accountServiceImpl) Doc(id string) *firestore.DocumentRef {
 	return service.db.Doc(accountDoc(service.userID, id))
 }
 
-func (service *accountServiceImpl) FindByID(id string) (*model.Account, error) {
-	return service.db.Find(accountDoc(service.userID, id), nil)
-}
-
-func (service *accountServiceImpl) FindByIDWith(id string, tx *firestore.Transaction) (*model.Account, error) {
+func (service *accountServiceImpl) FindByID(id string, tx *firestore.Transaction) (*model.Account, error) {
 	return service.db.Find(accountDoc(service.userID, id), tx)
 }
 
-func (service *accountServiceImpl) Create(account model.Account) (string, error) {
+func (service *accountServiceImpl) Create(account model.Account) (*string, error) {
 	data, _ := util.MapTo[map[string]interface{}](account)
-	return service.db.Create(accountsDB(service.userID), data)
+	return service.db.Create(accountsDB(service.userID), nil, data)
 }
 
 func (service *accountServiceImpl) Update(id string, doc map[string]interface{}) (bool, error) {

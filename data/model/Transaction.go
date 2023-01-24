@@ -11,7 +11,7 @@ type TransactionEvent struct {
 	Amount      MapValue[MoneyEvent] `json:"amount"`
 	AmountTo    MapValue[MoneyEvent] `json:"amountTo,omitempty"`
 	AmountFrom  MapValue[MoneyEvent] `json:"amountFrom,omitempty"`
-	AmountLocal MapValue[MoneyEvent] `json:"amountLocal,omitempty"`
+	AmountLocal MapValue[MoneyEvent] `json:"amountLocal"`
 	AccountTo   ReferenceValue       `json:"accountTo,omitempty"`
 	AccountFrom ReferenceValue       `json:"accountFrom,omitempty"`
 	Budget      ReferenceValue       `json:"budget,omitempty"`

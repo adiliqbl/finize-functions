@@ -42,12 +42,11 @@ func NewBudget(obj model.BudgetEvent) model.Budget {
 	return mapTo[model.Budget](obj)
 }
 
-func NewBudgetEvent(id string, name string, limit float64, spent float64) model.BudgetEvent {
+func NewBudgetEvent(id string, name string, limit float64) model.BudgetEvent {
 	return model.BudgetEvent{
 		ID:    data.StringValue{Value: &id},
 		Name:  data.StringValue{Value: &name},
 		Limit: data.DoubleValue{Value: &limit},
-		Spent: data.DoubleValue{Value: &spent},
 	}
 }
 
@@ -61,9 +60,6 @@ func NewBudgetEventMap(budget model.BudgetEvent) map[string]interface{} {
 		},
 		"limit": map[string]interface{}{
 			"doubleValue": budget.Limit.Value,
-		},
-		"spent": map[string]interface{}{
-			"doubleValue": budget.Spent.Value,
 		},
 	}
 }
