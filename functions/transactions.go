@@ -6,32 +6,15 @@ import (
 	"finize-functions.app/data/model"
 	"finize-functions.app/service"
 	"finize-functions.app/util"
+	"golang.org/x/exp/slices"
 	"log"
 )
 
 func OnTransactionCreated(factory service.Factory, transaction model.Transaction) error {
-	store := factory.FirestoreService()
 	accounts := factory.AccountService()
-	budgets := factory.BudgetService()
 
-	return store.Transaction(func(tx *firestore.Transaction) error {
+	return factory.FirestoreService().Transaction(func(tx *firestore.Transaction) error {
 		var ops []data.TransactionOperation
-
-		if !util.NullOrEmpty(transaction.AccountTo) {
-			budget, err := budgets.FindByIDWith(*transaction.Budget, tx)
-			if err != nil {
-				log.Fatalf("BudgetService.FindByID: %v", err)
-			}
-			budget.Spent = budget.Spent + transaction.AmountLocal.Amount
-
-			ops = append(ops, data.TransactionOperation{
-				Ref: budgets.Doc(budget.ID),
-				Data: []firestore.Update{{
-					Path:  model.FieldSpent,
-					Value: budget.Spent,
-				}},
-			})
-		}
 
 		if !util.NullOrEmpty(transaction.AccountFrom) {
 			accountFrom, err := accounts.FindByIDWith(*transaction.AccountFrom, tx)
@@ -49,18 +32,143 @@ func OnTransactionCreated(factory service.Factory, transaction model.Transaction
 			})
 		}
 
-		if !util.NullOrEmpty(transaction.Budget) {
+		if !util.NullOrEmpty(transaction.AccountTo) {
 			accountTo, err := accounts.FindByIDWith(*transaction.AccountTo, tx)
 			if err != nil {
 				log.Fatalf("AccountService.FindByID: %v", err)
 			}
-			accountTo.Balance = accountTo.Balance - transaction.AmountTo.Amount
+			accountTo.Balance = accountTo.Balance + transaction.AmountTo.Amount
 
 			ops = append(ops, data.TransactionOperation{
 				Ref: accounts.Doc(accountTo.ID),
 				Data: []firestore.Update{{
 					Path:  model.FieldBalance,
 					Value: accountTo.Balance,
+				}},
+			})
+		}
+
+		return data.Commit(tx, ops)
+	})
+}
+
+func OnTransactionUpdated(factory service.Factory, oldTransaction model.Transaction, transaction model.Transaction, fields []string) error {
+	if !(slices.Contains(fields, "accountFrom") ||
+		slices.Contains(fields, "accountTo") ||
+		slices.Contains(fields, "amountFrom") ||
+		slices.Contains(fields, "amountTo") ||
+		slices.Contains(fields, "amountFrom.amount") ||
+		slices.Contains(fields, "amountTo.amount")) {
+		return nil
+	}
+
+	accounts := factory.AccountService()
+
+	return factory.FirestoreService().Transaction(func(tx *firestore.Transaction) error {
+		mAccounts := map[string]model.Account{}
+
+		if oldTransaction.AccountFrom != nil {
+			account, err := accounts.FindByIDWith(*oldTransaction.AccountFrom, tx)
+			if err != nil {
+				log.Fatalf("AccountService.FindByID: %v", err)
+			}
+			account.Balance = account.Balance + oldTransaction.AmountFrom.Amount
+			mAccounts[account.ID] = *account
+		}
+
+		if oldTransaction.AccountTo != nil {
+			account, err := accounts.FindByIDWith(*oldTransaction.AccountTo, tx)
+			if err != nil {
+				log.Fatalf("AccountService.FindByID: %v", err)
+			}
+			account.Balance = account.Balance - oldTransaction.AmountTo.Amount
+			mAccounts[account.ID] = *account
+		}
+
+		if transaction.AccountFrom != nil {
+			var account model.Account
+
+			if mAccount, ok := mAccounts[*transaction.AccountFrom]; ok {
+				account = mAccount
+			} else {
+				apiAccount, err := accounts.FindByIDWith(*transaction.AccountFrom, tx)
+				if err != nil {
+					log.Fatalf("AccountService.FindByID: %v", err)
+				}
+				account = *apiAccount
+			}
+
+			account.Balance = account.Balance - transaction.AmountFrom.Amount
+			mAccounts[account.ID] = account
+		}
+
+		if transaction.AccountTo != nil {
+			var account model.Account
+
+			if mAccount, ok := mAccounts[*transaction.AccountTo]; ok {
+				account = mAccount
+			} else {
+				apiAccount, err := accounts.FindByIDWith(*transaction.AccountTo, tx)
+				if err != nil {
+					log.Fatalf("AccountService.FindByID: %v", err)
+				}
+				account = *apiAccount
+			}
+
+			account.Balance = account.Balance + transaction.AmountTo.Amount
+			mAccounts[account.ID] = account
+		}
+
+		var ops []data.TransactionOperation
+
+		for _, account := range mAccounts {
+			ops = append(ops, data.TransactionOperation{
+				Ref: accounts.Doc(account.ID),
+				Data: []firestore.Update{{
+					Path:  model.FieldBalance,
+					Value: account.Balance,
+				}},
+			})
+		}
+
+		return data.Commit(tx, ops)
+	})
+}
+
+func OnTransactionDeleted(factory service.Factory, transaction model.Transaction) error {
+	accounts := factory.AccountService()
+
+	return factory.FirestoreService().Transaction(func(tx *firestore.Transaction) error {
+		var ops []data.TransactionOperation
+
+		if transaction.AccountFrom != nil {
+			account, err := accounts.FindByIDWith(*transaction.AccountFrom, tx)
+			if err != nil {
+				log.Fatalf("AccountService.FindByID: %v", err)
+			}
+			account.Balance = account.Balance + transaction.AmountFrom.Amount
+
+			ops = append(ops, data.TransactionOperation{
+				Ref: accounts.Doc(account.ID),
+				Data: []firestore.Update{{
+					Path:  model.FieldBalance,
+					Value: account.Balance,
+				}},
+			})
+		}
+
+		if transaction.AccountTo != nil {
+			account, err := accounts.FindByIDWith(*transaction.AccountTo, tx)
+			if err != nil {
+				log.Fatalf("AccountService.FindByID: %v", err)
+			}
+			account.Balance = account.Balance - transaction.AmountTo.Amount
+
+			ops = append(ops, data.TransactionOperation{
+				Ref: accounts.Doc(account.ID),
+				Data: []firestore.Update{{
+					Path:  model.FieldBalance,
+					Value: account.Balance,
 				}},
 			})
 		}
