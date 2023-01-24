@@ -28,21 +28,13 @@ func NewTransactionService(db FirestoreService[model.Transaction], userID string
 	return &transactionServiceImpl{db: db, userID: userID}
 }
 
-func (service *transactionServiceImpl) Doc(id string) *firestore.DocumentRef {
-	return service.db.Doc(transactionDoc(service.userID, id))
-}
-
-func (service *transactionServiceImpl) FindByID(id string) (*model.Transaction, error) {
-	return service.db.Find(transactionDoc(service.userID, id), nil)
-}
-
-func (service *transactionServiceImpl) FindByIDWith(id string, tx *firestore.Transaction) (*model.Transaction, error) {
+func (service *transactionServiceImpl) FindByID(id string, tx *firestore.Transaction) (*model.Transaction, error) {
 	return service.db.Find(transactionDoc(service.userID, id), tx)
 }
 
-func (service *transactionServiceImpl) Create(transaction model.Transaction) (string, error) {
+func (service *transactionServiceImpl) Create(transaction model.Transaction) (*string, error) {
 	data, _ := util.MapTo[map[string]interface{}](transaction)
-	return service.db.Create(transactionsDB(service.userID), data)
+	return service.db.Create(transactionsDB(service.userID), nil, data)
 }
 
 func (service *transactionServiceImpl) Update(id string, doc map[string]interface{}) (bool, error) {

@@ -15,8 +15,8 @@ func NewServiceFactory(ctx context.Context, userID string) service.Factory {
 	return &serviceProvider{ctx: ctx, userID: userID}
 }
 
-func (p *serviceProvider) FirestoreService() service.FirestoreService[map[string]interface{}] {
-	return NewFirestoreService[map[string]interface{}](p.ctx)
+func (p *serviceProvider) Firestore() service.FirestoreDB {
+	return NewFirestoreDB(p.ctx)
 }
 
 func (p *serviceProvider) EventService() service.EventService {

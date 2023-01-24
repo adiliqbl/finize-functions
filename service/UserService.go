@@ -27,21 +27,13 @@ func NewUserService(db FirestoreService[model.User]) UserService {
 	return &userServiceImpl{db: db}
 }
 
-func (service *userServiceImpl) Doc(id string) *firestore.DocumentRef {
-	return service.db.Doc(userDoc(id))
-}
-
-func (service *userServiceImpl) FindByID(id string) (*model.User, error) {
-	return service.db.Find(userDoc(id), nil)
-}
-
-func (service *userServiceImpl) FindByIDWith(id string, tx *firestore.Transaction) (*model.User, error) {
+func (service *userServiceImpl) FindByID(id string, tx *firestore.Transaction) (*model.User, error) {
 	return service.db.Find(userDoc(id), tx)
 }
 
-func (service *userServiceImpl) Create(user model.User) (string, error) {
+func (service *userServiceImpl) Create(user model.User) (*string, error) {
 	data, _ := util.MapTo[map[string]interface{}](user)
-	return service.db.Create(usersDB(), data)
+	return service.db.Create(usersDB(), nil, data)
 }
 
 func (service *userServiceImpl) Update(id string, doc map[string]interface{}) (bool, error) {

@@ -13,11 +13,11 @@ import (
 func OnTransactionCreated(factory service.Factory, transaction model.Transaction) error {
 	accounts := factory.AccountService()
 
-	return factory.FirestoreService().Transaction(func(tx *firestore.Transaction) []data.TransactionOperation {
+	return factory.Firestore().Transaction(func(tx *firestore.Transaction) []data.TransactionOperation {
 		var ops []data.TransactionOperation
 
 		if !util.NullOrEmpty(transaction.AccountFrom) {
-			accountFrom, err := accounts.FindByIDWith(*transaction.AccountFrom, tx)
+			accountFrom, err := accounts.FindByID(*transaction.AccountFrom, tx)
 			if err != nil {
 				log.Fatalf("AccountService.FindByID: %v", err)
 			}
@@ -33,7 +33,7 @@ func OnTransactionCreated(factory service.Factory, transaction model.Transaction
 		}
 
 		if !util.NullOrEmpty(transaction.AccountTo) {
-			accountTo, err := accounts.FindByIDWith(*transaction.AccountTo, tx)
+			accountTo, err := accounts.FindByID(*transaction.AccountTo, tx)
 			if err != nil {
 				log.Fatalf("AccountService.FindByID: %v", err)
 			}
@@ -64,11 +64,11 @@ func OnTransactionUpdated(factory service.Factory, oldTransaction model.Transact
 
 	accounts := factory.AccountService()
 
-	return factory.FirestoreService().Transaction(func(tx *firestore.Transaction) []data.TransactionOperation {
+	return factory.Firestore().Transaction(func(tx *firestore.Transaction) []data.TransactionOperation {
 		mAccounts := map[string]model.Account{}
 
 		if oldTransaction.AccountFrom != nil {
-			account, err := accounts.FindByIDWith(*oldTransaction.AccountFrom, tx)
+			account, err := accounts.FindByID(*oldTransaction.AccountFrom, tx)
 			if err != nil {
 				log.Fatalf("AccountService.FindByID: %v", err)
 			}
@@ -77,7 +77,7 @@ func OnTransactionUpdated(factory service.Factory, oldTransaction model.Transact
 		}
 
 		if oldTransaction.AccountTo != nil {
-			account, err := accounts.FindByIDWith(*oldTransaction.AccountTo, tx)
+			account, err := accounts.FindByID(*oldTransaction.AccountTo, tx)
 			if err != nil {
 				log.Fatalf("AccountService.FindByID: %v", err)
 			}
@@ -91,7 +91,7 @@ func OnTransactionUpdated(factory service.Factory, oldTransaction model.Transact
 			if mAccount, ok := mAccounts[*transaction.AccountFrom]; ok {
 				account = mAccount
 			} else {
-				apiAccount, err := accounts.FindByIDWith(*transaction.AccountFrom, tx)
+				apiAccount, err := accounts.FindByID(*transaction.AccountFrom, tx)
 				if err != nil {
 					log.Fatalf("AccountService.FindByID: %v", err)
 				}
@@ -108,7 +108,7 @@ func OnTransactionUpdated(factory service.Factory, oldTransaction model.Transact
 			if mAccount, ok := mAccounts[*transaction.AccountTo]; ok {
 				account = mAccount
 			} else {
-				apiAccount, err := accounts.FindByIDWith(*transaction.AccountTo, tx)
+				apiAccount, err := accounts.FindByID(*transaction.AccountTo, tx)
 				if err != nil {
 					log.Fatalf("AccountService.FindByID: %v", err)
 				}
@@ -138,11 +138,11 @@ func OnTransactionUpdated(factory service.Factory, oldTransaction model.Transact
 func OnTransactionDeleted(factory service.Factory, transaction model.Transaction) error {
 	accounts := factory.AccountService()
 
-	return factory.FirestoreService().Transaction(func(tx *firestore.Transaction) []data.TransactionOperation {
+	return factory.Firestore().Transaction(func(tx *firestore.Transaction) []data.TransactionOperation {
 		var ops []data.TransactionOperation
 
 		if transaction.AccountFrom != nil {
-			account, err := accounts.FindByIDWith(*transaction.AccountFrom, tx)
+			account, err := accounts.FindByID(*transaction.AccountFrom, tx)
 			if err != nil {
 				log.Fatalf("AccountService.FindByID: %v", err)
 			}
@@ -158,7 +158,7 @@ func OnTransactionDeleted(factory service.Factory, transaction model.Transaction
 		}
 
 		if transaction.AccountTo != nil {
-			account, err := accounts.FindByIDWith(*transaction.AccountTo, tx)
+			account, err := accounts.FindByID(*transaction.AccountTo, tx)
 			if err != nil {
 				log.Fatalf("AccountService.FindByID: %v", err)
 			}

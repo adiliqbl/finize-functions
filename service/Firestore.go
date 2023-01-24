@@ -23,10 +23,14 @@ type firestoreDB[T any] struct {
 
 type FirestoreService[T any] interface {
 	Find(path string, tx *firestore.Transaction) (*T, error)
-	Create(collection string, doc map[string]interface{}) (string, error)
+	Create(collection string, id *string, doc map[string]interface{}) (*string, error)
 	Update(path string, doc map[string]interface{}) (bool, error)
 	Delete(path string) (bool, error)
 
+	Doc(path string) *firestore.DocumentRef
+}
+
+type FirestoreDB interface {
 	Doc(path string) *firestore.DocumentRef
 	Collection(collection string) *firestore.CollectionRef
 	Batch(run func(batch *firestore.BulkWriter) []data.TransactionOperation) error
@@ -53,11 +57,19 @@ func InitFirestore(ctx context.Context) error {
 }
 
 func newFirestoreService[T any](ctx context.Context, eventID string) FirestoreService[T] {
-	return &firestoreDB[T]{client: firestoreDatabase, ctx: ctx, eventID: eventID}
+	return NewFirestoreService[T](ctx, firestoreDatabase, eventID)
 }
 
 func NewFirestoreService[T any](ctx context.Context, db *firestore.Client, eventID string) FirestoreService[T] {
 	return &firestoreDB[T]{client: db, ctx: ctx, eventID: eventID}
+}
+
+func newFirestoreDB(ctx context.Context, eventID string) FirestoreDB {
+	return NewFirestoreDB(ctx, firestoreDatabase, eventID)
+}
+
+func NewFirestoreDB(ctx context.Context, db *firestore.Client, eventID string) FirestoreDB {
+	return &firestoreDB[map[string]interface{}]{client: db, ctx: ctx, eventID: eventID}
 }
 
 func (store *firestoreDB[T]) Doc(path string) *firestore.DocumentRef {
@@ -114,17 +126,22 @@ func (store *firestoreDB[T]) Find(path string, tx *firestore.Transaction) (*T, e
 	return &document, err
 }
 
-func (store *firestoreDB[T]) Create(collection string, doc map[string]interface{}) (string, error) {
-	ref := store.client.Collection(collection).NewDoc()
-	doc["id"] = ref.ID
+func (store *firestoreDB[T]) Create(collection string, id *string, doc map[string]interface{}) (*string, error) {
+	var ref *firestore.DocumentRef
+	if util.NullOrEmpty(id) {
+		ref = store.client.Collection(collection).NewDoc()
+		doc["id"] = ref.ID
+	} else {
+		ref = store.client.Doc(collection + "/" + *id)
+	}
 
 	_, err := ref.Set(store.ctx, doc)
 	if err != nil {
 		log.Fatalf("firestoreDB.Create: %v", err)
-		return "", err
+		return nil, err
 	}
 
-	return ref.ID, nil
+	return util.Pointer(ref.ID), nil
 }
 
 func (store *firestoreDB[T]) Update(path string, doc map[string]interface{}) (bool, error) {

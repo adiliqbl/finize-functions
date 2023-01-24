@@ -50,7 +50,7 @@ func (service *eventServiceImpl) SetProcessed(tx *firestore.Transaction) error {
 	if tx != nil {
 		return tx.Set(service.db.Doc(eventDoc(service.eventID)), doc)
 	} else {
-		_, err = service.db.Create(eventDoc(service.eventID), doc)
+		_, err = service.db.Create(eventsDB(), &service.eventID, doc)
 		return err
 	}
 }

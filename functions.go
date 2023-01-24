@@ -68,7 +68,7 @@ func OnTransactionDeleted(ctx context.Context, e data.FirestoreEvent[model.Trans
 		return nil
 	}
 
-	transaction, err := util.MapTo[model.Transaction](e.OldValue.Data)
+	transaction, err := util.MapTo[model.Transaction](e.Value.Data)
 	if err != nil {
 		log.Fatalf("Failed to parse transaction %v", err)
 	}
@@ -77,8 +77,5 @@ func OnTransactionDeleted(ctx context.Context, e data.FirestoreEvent[model.Trans
 
 //goland:noinspection GoUnusedExportedFunction,GoUnusedParameter
 func GetExchangeRate(ctx context.Context) error {
-	if err := service.InitFirestore(context.Background()); err != nil {
-		log.Fatalf("Failed to initialize Firestore %v", err)
-	}
 	return nil
 }

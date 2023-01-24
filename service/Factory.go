@@ -6,7 +6,7 @@ import (
 )
 
 type Factory interface {
-	FirestoreService() FirestoreService[map[string]interface{}]
+	Firestore() FirestoreDB
 	EventService() EventService
 	UserService() UserService
 	AccountService() AccountService
@@ -24,8 +24,8 @@ func NewServiceFactory(ctx context.Context, eventID string, userID string) Facto
 	return &serviceProvider{ctx: ctx, eventID: eventID, userID: userID}
 }
 
-func (p *serviceProvider) FirestoreService() FirestoreService[map[string]interface{}] {
-	return newFirestoreService[map[string]interface{}](p.ctx, p.eventID)
+func (p *serviceProvider) Firestore() FirestoreDB {
+	return newFirestoreDB(p.ctx, p.eventID)
 }
 
 func (p *serviceProvider) EventService() EventService {

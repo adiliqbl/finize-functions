@@ -48,3 +48,7 @@ func InitTestFirestore() {
 func NewFirestoreService[T any](ctx context.Context) service.FirestoreService[T] {
 	return service.NewFirestoreService[T](ctx, testFirestoreDatabase, "event")
 }
+
+func NewFirestoreDB(ctx context.Context) service.FirestoreDB {
+	return service.NewFirestoreDB(ctx, testFirestoreDatabase, "event")
+}
