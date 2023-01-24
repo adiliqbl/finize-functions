@@ -18,6 +18,6 @@ func TestExchangeRateService(t *testing.T) {
 	assert.True(t, toPKR != nil)
 	assert.True(t, fromGBP == nil)
 	assert.True(t, toGBP == nil)
-	assert.Equal(t, 120.0, *toUSD)
-	assert.Equal(t, 1/120.0, *toPKR)
+	assert.Equal(t, 120.0, toUSD.Rate)
+	assert.Equal(t, 1/120.0, toPKR.Rate)
 }
