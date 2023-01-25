@@ -11,7 +11,7 @@ import (
 type EventService interface {
 	IsProcessed() bool
 	SetProcessed(tx *firestore.Transaction) error
-	SetProcessedInBatch(batch *firestore.BulkWriter) error
+	SetProcessedBatch(batch *firestore.BulkWriter) error
 }
 
 type eventServiceImpl struct {
@@ -55,7 +55,7 @@ func (service *eventServiceImpl) SetProcessed(tx *firestore.Transaction) error {
 	}
 }
 
-func (service *eventServiceImpl) SetProcessedInBatch(batch *firestore.BulkWriter) error {
+func (service *eventServiceImpl) SetProcessedBatch(batch *firestore.BulkWriter) error {
 	doc, err := util.MapTo[map[string]interface{}](model.Event{Processed: true})
 	if err != nil {
 		log.Fatalf("SetProcessed – Failed to convert event to map: %v", err)

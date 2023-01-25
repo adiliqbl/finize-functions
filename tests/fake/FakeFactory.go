@@ -40,5 +40,9 @@ func (p *serviceProvider) TransactionService() service.TransactionService {
 }
 
 func (p *serviceProvider) ExchangeRateService() service.ExchangeRateService {
-	return service.NewExchangeRateService(NewFirestoreService[map[string]interface{}](p.ctx))
+	return service.NewExchangeRateService(NewFirestoreService[map[string]model.ExchangeRate](p.ctx))
+}
+
+func (p *serviceProvider) ForexService() service.ForexService {
+	return NewForexService()
 }

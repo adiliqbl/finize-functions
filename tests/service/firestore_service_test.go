@@ -67,8 +67,8 @@ func TestTransaction(t *testing.T) {
 	assert.Equal(t, 25.0, a2.Balance)
 
 	createData := map[string]interface{}{"test": "value"}
-	err := database.Transaction(func(tx *firestore.Transaction) []data.TransactionOperation {
-		return []data.TransactionOperation{{
+	err := database.Transaction(func(tx *firestore.Transaction) []data.DatabaseOperation {
+		return []data.DatabaseOperation{{
 			Ref: accountService.Doc(*id1),
 			Data: []firestore.Update{{
 				Path:  model.FieldBalance,

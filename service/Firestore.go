@@ -22,22 +22,25 @@ type firestoreDB[T any] struct {
 }
 
 type FirestoreService[T any] interface {
+	FirestoreDB
 	Find(path string, tx *firestore.Transaction) (*T, error)
 	Create(collection string, id *string, doc map[string]interface{}) (*string, error)
 	Update(path string, doc map[string]interface{}) (bool, error)
 	Delete(path string) (bool, error)
-
-	Doc(path string) *firestore.DocumentRef
 }
 
 type FirestoreDB interface {
 	Doc(path string) *firestore.DocumentRef
 	Collection(collection string) *firestore.CollectionRef
-	Batch(run func(batch *firestore.BulkWriter) []data.TransactionOperation) error
-	Transaction(run func(tx *firestore.Transaction) []data.TransactionOperation) error
+	Batch(run func() []data.DatabaseOperation) error
+	Transaction(run func(tx *firestore.Transaction) []data.DatabaseOperation) error
 }
 
 func InitFirestore(ctx context.Context) error {
+	if firestoreDatabase != nil {
+		return nil
+	}
+
 	// Use the application default credentials.
 	conf := &firebase.Config{ProjectID: os.Getenv("GOOGLE_CLOUD_PROJECT")}
 
@@ -80,28 +83,41 @@ func (store *firestoreDB[T]) Collection(path string) *firestore.CollectionRef {
 	return store.client.Collection(path)
 }
 
-func (store *firestoreDB[T]) Batch(run func(batch *firestore.BulkWriter) []data.TransactionOperation) error {
-	batch := store.client.BulkWriter(store.ctx)
-	ops := run(batch)
+func (store *firestoreDB[T]) Batch(run func() []data.DatabaseOperation) error {
+	ops := run()
 
-	events := NewEventService(NewFirestoreService[model.Event](store.ctx, store.client, store.eventID), store.eventID)
-	if err := events.SetProcessedInBatch(batch); err != nil {
-		return err
+	if len(ops) == 0 {
+		return nil
 	}
 
-	return data.Perform(batch, ops)
+	batch := store.client.BulkWriter(store.ctx)
+
+	if store.eventID != "" {
+		events := NewEventService(NewFirestoreService[model.Event](store.ctx, store.client, store.eventID), store.eventID)
+		if err := events.SetProcessedBatch(batch); err != nil {
+			return err
+		}
+	}
+
+	return data.CommitBatch(batch, ops)
 }
 
-func (store *firestoreDB[T]) Transaction(run func(tx *firestore.Transaction) []data.TransactionOperation) error {
+func (store *firestoreDB[T]) Transaction(run func(tx *firestore.Transaction) []data.DatabaseOperation) error {
 	return store.client.RunTransaction(store.ctx, func(ctx context.Context, tx *firestore.Transaction) error {
 		ops := run(tx)
 
-		events := NewEventService(NewFirestoreService[model.Event](store.ctx, store.client, store.eventID), store.eventID)
-		if err := events.SetProcessed(tx); err != nil {
-			return err
+		if len(ops) == 0 {
+			return nil
 		}
 
-		return data.Commit(tx, ops)
+		if store.eventID != "" {
+			events := NewEventService(NewFirestoreService[model.Event](store.ctx, store.client, store.eventID), store.eventID)
+			if err := events.SetProcessed(tx); err != nil {
+				return err
+			}
+		}
+
+		return data.CommitTransaction(tx, ops)
 	})
 }
 

@@ -1,19 +1,21 @@
 package service
 
 import (
+	"finize-functions.app/data"
 	"finize-functions.app/data/model"
 	"finize-functions.app/util"
 	"fmt"
+	"log"
 	"time"
 )
 
 type ExchangeRateService interface {
 	GetRate(fromIso string, toIso string) *model.ExchangeRate
-	SetRate(fromIso string, toIso string, rate float64) error
+	SetRates(iso string, rates map[string]float64) error
 }
 
 type exchangeRateServiceImpl struct {
-	db FirestoreService[map[string]interface{}]
+	db FirestoreService[map[string]model.ExchangeRate]
 }
 
 func exchangeRateDB() string {
@@ -24,69 +26,62 @@ func exchangeRateDoc(fromIso string) string {
 	return fmt.Sprintf("%s/%s", exchangeRateDB(), fromIso)
 }
 
-func NewExchangeRateService(db FirestoreService[map[string]interface{}]) ExchangeRateService {
+func NewExchangeRateService(db FirestoreService[map[string]model.ExchangeRate]) ExchangeRateService {
 	return &exchangeRateServiceImpl{db: db}
 }
 
 func (service *exchangeRateServiceImpl) GetRate(fromIso string, toIso string) *model.ExchangeRate {
+	if fromIso == toIso {
+		return &model.ExchangeRate{Rate: 1.0, Date: time.Now().UTC()}
+	}
+
 	rates, err := service.db.Find(exchangeRateDoc(fromIso), nil)
 	if err != nil || rates == nil {
 		return nil
 	}
 
 	if rate, ok := (*rates)[toIso]; ok {
-		if exRate, err := util.MapTo[model.ExchangeRate](rate); err == nil {
-			return &exRate
-		} else {
-			return nil
-		}
+		return &rate
 	} else {
 		return nil
 	}
 }
 
-func (service *exchangeRateServiceImpl) SetRate(fromIso string, toIso string, rate float64) error {
-	fromRate, err := util.MapTo[map[string]interface{}](model.ExchangeRate{
-		Rate: rate,
-		Date: time.Now().UTC(),
+func (service *exchangeRateServiceImpl) SetRates(fromIso string, rates map[string]float64) error {
+	return service.db.Batch(func() []data.DatabaseOperation {
+		var ops []data.DatabaseOperation
+
+		date := time.Now().UTC()
+		fromIsoMap := map[string]model.ExchangeRate{}
+		for iso, rate := range rates {
+			fromIsoMap[iso] = model.ExchangeRate{Rate: rate, Date: date}
+
+			isoRate, err := util.MapTo[map[string]interface{}](model.ExchangeRate{
+				Rate: 1 / rate,
+				Date: date,
+			})
+			if err != nil {
+				log.Fatalf("ExchangeRates.SetRates – Failed to convert: %v", err)
+			}
+
+			ops = append(ops, data.DatabaseOperation{
+				Ref: service.db.Doc(exchangeRateDoc(iso)),
+				Data: map[string]interface{}{
+					fromIso: isoRate,
+				},
+			})
+		}
+
+		fromRate, err := util.MapTo[map[string]interface{}](fromIsoMap)
+		if err != nil {
+			log.Fatalf("ExchangeRates.SetRates – Failed to convert: %v", err)
+		}
+
+		ops = append(ops, data.DatabaseOperation{
+			Ref:  service.db.Doc(exchangeRateDoc(fromIso)),
+			Data: fromRate,
+		})
+
+		return ops
 	})
-	if err != nil {
-		return err
-	}
-
-	fromRates, err := service.db.Find(fromIso, nil)
-	if err != nil || fromRates == nil {
-		_, err = service.db.Create(exchangeRateDB(), &fromIso, map[string]interface{}{toIso: fromRate})
-		if err != nil {
-			return err
-		}
-	} else {
-		_, err = service.db.Update(exchangeRateDoc(fromIso), map[string]interface{}{toIso: fromRate})
-		if err != nil {
-			return err
-		}
-	}
-
-	toRate, err := util.MapTo[map[string]interface{}](model.ExchangeRate{
-		Rate: 1 / rate,
-		Date: time.Now().UTC(),
-	})
-	if err != nil {
-		return err
-	}
-
-	toRates, err := service.db.Find(toIso, nil)
-	if err != nil || toRates == nil {
-		_, err = service.db.Create(exchangeRateDB(), &toIso, map[string]interface{}{fromIso: toRate})
-		if err != nil {
-			return err
-		}
-	} else {
-		_, err = service.db.Update(exchangeRateDoc(toIso), map[string]interface{}{fromIso: toRate})
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

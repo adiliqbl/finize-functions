@@ -23,3 +23,8 @@ gcloud functions deploy TransactionDeleted \
   --trigger-event "providers/cloud.firestore/eventTypes/document.delete" \
   --trigger-resource "projects/$PROJECT_ID/databases/(default)/documents/user-transactions/{userId}/transactions/{transactionId}" \
   --retry
+
+gcloud functions deploy GetExchangeRate \
+  --entry-point "GetExchangeRate" \
+  --runtime "$RUNTIME" \
+  --trigger-http

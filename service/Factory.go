@@ -13,6 +13,7 @@ type Factory interface {
 	BudgetService() BudgetService
 	TransactionService() TransactionService
 	ExchangeRateService() ExchangeRateService
+	ForexService() ForexService
 }
 
 type serviceProvider struct {
@@ -50,5 +51,9 @@ func (p *serviceProvider) TransactionService() TransactionService {
 }
 
 func (p *serviceProvider) ExchangeRateService() ExchangeRateService {
-	return NewExchangeRateService(newFirestoreService[map[string]interface{}](p.ctx, p.eventID))
+	return NewExchangeRateService(newFirestoreService[map[string]model.ExchangeRate](p.ctx, p.eventID))
+}
+
+func (p *serviceProvider) ForexService() ForexService {
+	return NewForexService()
 }
