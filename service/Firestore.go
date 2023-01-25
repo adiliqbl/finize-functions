@@ -23,6 +23,8 @@ type firestoreDB[T any] struct {
 
 type FirestoreService[T any] interface {
 	FirestoreDB
+	GetAll(collection string) ([]T, error)
+	Paginate(query firestore.Query, start uint, limit uint) ([]T, error)
 	Find(path string, tx *firestore.Transaction) (*T, error)
 	Create(collection string, id *string, doc map[string]interface{}) (*string, error)
 	Update(path string, doc map[string]interface{}) (bool, error)
@@ -119,6 +121,37 @@ func (store *firestoreDB[T]) Transaction(run func(tx *firestore.Transaction) []d
 
 		return data.CommitTransaction(tx, ops)
 	})
+}
+
+func (store *firestoreDB[T]) runQuery(query firestore.Query) ([]T, error) {
+	iterator := query.Documents(store.ctx)
+	snapshots, err := iterator.GetAll()
+
+	if err != nil {
+		log.Printf("Failed to get all documents: %v", err)
+	}
+
+	var docs []T
+	for _, snap := range snapshots {
+		doc, err := util.MapTo[T](snap.Data())
+
+		if err != nil {
+			log.Printf("Failed to parse task: %v", err)
+			return nil, err
+		}
+
+		docs = append(docs, doc)
+	}
+
+	return docs, nil
+}
+
+func (store *firestoreDB[T]) Paginate(query firestore.Query, start uint, limit uint) ([]T, error) {
+	return store.runQuery(query.Offset(int(start)).Limit(int(limit)))
+}
+
+func (store *firestoreDB[T]) GetAll(collection string) ([]T, error) {
+	return store.runQuery(store.client.Collection(collection).Query)
 }
 
 func (store *firestoreDB[T]) Find(path string, tx *firestore.Transaction) (*T, error) {
