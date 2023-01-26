@@ -1,10 +1,22 @@
 package model
 
-import "finize-functions.app/data"
+import "time"
+
+type TaskType string
+
+const (
+	FieldCreatedAt = "createdAt"
+)
+
+const (
+	CreateTransaction = TaskType("create-transaction")
+)
 
 type RecurringTask struct {
+	Id        string                 `json:"id"`
 	UserID    string                 `json:"user"`
-	Type      data.TaskType          `json:"type"`
-	Frequency int                    `json:"frequency"`
+	Type      TaskType               `json:"type"`
+	Frequency uint                   `json:"frequency"`
 	Body      map[string]interface{} `json:"body"`
+	CreatedAt time.Time              `json:"createdAt"`
 }

@@ -11,6 +11,7 @@ import (
 
 var userService services.UserService
 var eventService services.EventService
+var taskService services.TaskService
 var budgetService services.BudgetService
 var accountService services.AccountService
 var transactionService services.TransactionService
@@ -43,6 +44,7 @@ func setupFirestore() {
 	factory := fake.NewServiceFactory(context.Background(), "test-user")
 	userService = factory.UserService()
 	eventService = factory.EventService()
+	taskService = factory.TaskService()
 	budgetService = factory.BudgetService()
 	accountService = factory.AccountService()
 	transactionService = factory.TransactionService()
