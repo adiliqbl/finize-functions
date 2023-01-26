@@ -9,7 +9,6 @@ import (
 	"testing"
 )
 
-var database services.FirestoreDB
 var userService services.UserService
 var eventService services.EventService
 var budgetService services.BudgetService
@@ -42,7 +41,6 @@ func setupFirestore() {
 	fake.InitTestFirestore()
 
 	factory := fake.NewServiceFactory(context.Background(), "test-user")
-	database = factory.Firestore()
 	userService = factory.UserService()
 	eventService = factory.EventService()
 	budgetService = factory.BudgetService()

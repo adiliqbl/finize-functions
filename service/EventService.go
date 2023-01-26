@@ -34,7 +34,7 @@ func NewEventService(db FirestoreService[model.Event], eventID string) EventServ
 func (service *eventServiceImpl) IsProcessed() bool {
 	event, err := service.db.Find(eventDoc(service.eventID), nil)
 	if err != nil {
-		log.Fatalf("IsTransactionProcessed: %v", err)
+		log.Printf("IsTransactionProcessed: %v", err)
 		return false
 	}
 	return event.Processed

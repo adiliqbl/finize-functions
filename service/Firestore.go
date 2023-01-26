@@ -21,6 +21,13 @@ type firestoreDB[T any] struct {
 	eventID string
 }
 
+type FirestoreDB interface {
+	Doc(path string) *firestore.DocumentRef
+	Collection(collection string) *firestore.CollectionRef
+	Batch(run func() []data.DatabaseOperation) error
+	Transaction(run func(tx *firestore.Transaction) []data.DatabaseOperation) error
+}
+
 type FirestoreService[T any] interface {
 	FirestoreDB
 	GetAll(collection string) ([]T, error)
@@ -29,13 +36,6 @@ type FirestoreService[T any] interface {
 	Create(collection string, id *string, doc map[string]interface{}) (*string, error)
 	Update(path string, doc map[string]interface{}) (bool, error)
 	Delete(path string) (bool, error)
-}
-
-type FirestoreDB interface {
-	Doc(path string) *firestore.DocumentRef
-	Collection(collection string) *firestore.CollectionRef
-	Batch(run func() []data.DatabaseOperation) error
-	Transaction(run func(tx *firestore.Transaction) []data.DatabaseOperation) error
 }
 
 func InitFirestore(ctx context.Context) error {
@@ -182,6 +182,7 @@ func (store *firestoreDB[T]) Create(collection string, id *string, doc map[strin
 		doc["id"] = ref.ID
 	} else {
 		ref = store.client.Doc(collection + "/" + *id)
+		doc["id"] = ref.ID
 	}
 
 	_, err := ref.Set(store.ctx, doc)

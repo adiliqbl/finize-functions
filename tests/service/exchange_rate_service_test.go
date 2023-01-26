@@ -2,11 +2,15 @@ package service
 
 import (
 	"context"
+	"finize-functions.app/data/model"
+	"finize-functions.app/tests/fake"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestExchangeRateService(t *testing.T) {
+	database := fake.NewFirestoreService[model.ExchangeRate](context.Background())
+
 	_, _ = database.Doc("exchange-rates/PKR").Delete(context.Background())
 	_, _ = database.Doc("exchange-rates/GBP").Delete(context.Background())
 	_, _ = database.Doc("exchange-rates/USD").Delete(context.Background())

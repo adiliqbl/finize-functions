@@ -16,7 +16,7 @@ func TestGetExchangeRate(t *testing.T) {
 		"two": 2,
 	})
 
-	_, _ = database.Doc("exchange-rates/USD").Delete(context.Background())
+	_, _ = testFactory.Firestore().Doc("exchange-rates/USD").Delete(context.Background())
 	rate := exchangeRateService.GetRate("USD", "PKR")
 	assert.True(t, rate == nil)
 

@@ -10,7 +10,6 @@ import (
 )
 
 var testFactory services.Factory
-var database services.FirestoreDB
 var accountService services.AccountService
 var transactionService services.TransactionService
 var exchangeRateService services.ExchangeRateService
@@ -44,7 +43,6 @@ func setupFirestore() {
 	ExitOnError(err, "Failed to create user")
 
 	testFactory = fake.NewServiceFactory(context.Background(), *userID)
-	database = testFactory.Firestore()
 	accountService = testFactory.AccountService()
 	transactionService = testFactory.TransactionService()
 	exchangeRateService = testFactory.ExchangeRateService()
