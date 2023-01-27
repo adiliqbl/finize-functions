@@ -47,4 +47,6 @@ func setupFirestore() {
 	transactionService = testFactory.TransactionService()
 	exchangeRateService = testFactory.ExchangeRateService()
 	_ = testFactory.ForexService()
+
+	ClearDatabase()
 }

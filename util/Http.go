@@ -35,7 +35,11 @@ func ParseApiResponse(result *http.Response) (map[string]interface{}, error) {
 	var docType map[string]interface{}
 	err := json.Unmarshal(body, &docType)
 	if err != nil {
-		log.Fatalf("MapTo: %v", err)
+		if _, ok := err.(*json.SyntaxError); ok {
+			return nil, nil
+		} else {
+			log.Fatalf("MapTo: %v", err)
+		}
 	}
 	return docType, err
 }

@@ -3,20 +3,20 @@ package service
 import (
 	"context"
 	"finize-functions.app/data/model"
+	"finize-functions.app/tests"
 	"finize-functions.app/tests/fake"
-	"finize-functions.app/util"
 	"github.com/stretchr/testify/assert"
-	"strconv"
 	"testing"
 )
 
 func TestTasksPagination(t *testing.T) {
 	database := fake.NewFirestoreService[model.RecurringTask](context.Background())
+	tests.ClearDatabase()
 
-	for i := 0; i <= 30; i++ {
-		testTask := fake.NewRecurringTask("recurring-user"+strconv.Itoa(i), model.CreateTransaction,
-			24*7, map[string]interface{}{"test": "value"})
-		_, _ = database.Create("paginate-users", util.Pointer("user"+strconv.Itoa(i)), fake.MapTo[map[string]interface{}](testTask))
+	for i := 0; i < 30; i++ {
+		testTask := fake.NewRecurringTask("userId", model.CreateTransaction,
+			3, model.Weekly, map[string]interface{}{"test": "value"})
+		_, _ = database.Create("tasks", nil, fake.MapTo[map[string]interface{}](testTask))
 	}
 
 	tasks, err := taskService.PaginateTasks(0, 500)

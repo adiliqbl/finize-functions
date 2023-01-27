@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	services "finize-functions.app/service"
+	"finize-functions.app/tests"
 	"finize-functions.app/tests/fake"
 	"fmt"
 	"os"
@@ -49,4 +50,6 @@ func setupFirestore() {
 	accountService = factory.AccountService()
 	transactionService = factory.TransactionService()
 	exchangeRateService = factory.ExchangeRateService()
+
+	tests.ClearDatabase()
 }
