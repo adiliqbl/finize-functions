@@ -18,12 +18,12 @@ type exchangeRateServiceImpl struct {
 	db FirestoreService[map[string]model.ExchangeRate]
 }
 
-func exchangeRateDB() string {
+func ExchangeRateDB() string {
 	return "exchange-rates"
 }
 
-func exchangeRateDoc(fromIso string) string {
-	return fmt.Sprintf("%s/%s", exchangeRateDB(), fromIso)
+func ExchangeRateDoc(fromIso string) string {
+	return fmt.Sprintf("%s/%s", ExchangeRateDB(), fromIso)
 }
 
 func NewExchangeRateService(db FirestoreService[map[string]model.ExchangeRate]) ExchangeRateService {
@@ -35,7 +35,7 @@ func (service *exchangeRateServiceImpl) GetRate(fromIso string, toIso string) *m
 		return &model.ExchangeRate{Rate: 1.0, Date: time.Now().UTC()}
 	}
 
-	rates, err := service.db.Find(exchangeRateDoc(fromIso), nil)
+	rates, err := service.db.Find(ExchangeRateDoc(fromIso), nil)
 	if err != nil || rates == nil {
 		return nil
 	}
@@ -65,7 +65,7 @@ func (service *exchangeRateServiceImpl) SetRates(fromIso string, rates map[strin
 			}
 
 			ops = append(ops, data.DatabaseOperation{
-				Ref: service.db.Doc(exchangeRateDoc(iso)),
+				Ref: service.db.Doc(ExchangeRateDoc(iso)),
 				Data: map[string]interface{}{
 					fromIso: isoRate,
 				},
@@ -78,7 +78,7 @@ func (service *exchangeRateServiceImpl) SetRates(fromIso string, rates map[strin
 		}
 
 		ops = append(ops, data.DatabaseOperation{
-			Ref:  service.db.Doc(exchangeRateDoc(fromIso)),
+			Ref:  service.db.Doc(ExchangeRateDoc(fromIso)),
 			Data: fromRate,
 		})
 

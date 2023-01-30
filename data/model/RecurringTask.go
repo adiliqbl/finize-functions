@@ -6,6 +6,7 @@ type TaskType string
 type Frequency string
 
 const (
+	FieldLastDate  = "lastDate"
 	FieldCreatedAt = "createdAt"
 )
 
@@ -24,7 +25,9 @@ type RecurringTask struct {
 	UserID        string                 `json:"user"`
 	Type          TaskType               `json:"type"`
 	Frequency     Frequency              `json:"frequency"`
-	RecurringTime uint                   `json:"recurringTime"`
-	Body          map[string]interface{} `json:"body"`
+	RecurringTime int                    `json:"recurringTime"`
+	Timezone      string                 `json:"timezone"`
+	Data          map[string]interface{} `json:"data"`
+	LastDate      *time.Time             `json:"lastDate,omitempty"`
 	CreatedAt     time.Time              `json:"createdAt"`
 }

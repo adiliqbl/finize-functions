@@ -17,12 +17,12 @@ type accountServiceImpl struct {
 	userID string
 }
 
-func accountsDB(userID string) string {
+func AccountsDB(userID string) string {
 	return fmt.Sprintf("user-accounts/%s/accounts", userID)
 }
 
-func accountDoc(userID string, id string) string {
-	return fmt.Sprintf("%s/%s", accountsDB(userID), id)
+func AccountDoc(userID string, id string) string {
+	return fmt.Sprintf("%s/%s", AccountsDB(userID), id)
 }
 
 func NewAccountService(db FirestoreService[model.Account], userID string) AccountService {
@@ -30,22 +30,22 @@ func NewAccountService(db FirestoreService[model.Account], userID string) Accoun
 }
 
 func (service *accountServiceImpl) Doc(id string) *firestore.DocumentRef {
-	return service.db.Doc(accountDoc(service.userID, id))
+	return service.db.Doc(AccountDoc(service.userID, id))
 }
 
 func (service *accountServiceImpl) FindByID(id string, tx *firestore.Transaction) (*model.Account, error) {
-	return service.db.Find(accountDoc(service.userID, id), tx)
+	return service.db.Find(AccountDoc(service.userID, id), tx)
 }
 
 func (service *accountServiceImpl) Create(account model.Account) (*string, error) {
 	data, _ := util.MapTo[map[string]interface{}](account)
-	return service.db.Create(accountsDB(service.userID), nil, data)
+	return service.db.Create(AccountsDB(service.userID), nil, data)
 }
 
 func (service *accountServiceImpl) Update(id string, doc map[string]interface{}) (bool, error) {
-	return service.db.Update(accountDoc(service.userID, id), doc)
+	return service.db.Update(AccountDoc(service.userID, id), doc)
 }
 
 func (service *accountServiceImpl) Delete(id string) (bool, error) {
-	return service.db.Delete(accountDoc(service.userID, id))
+	return service.db.Delete(AccountDoc(service.userID, id))
 }

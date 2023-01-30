@@ -19,12 +19,12 @@ type eventServiceImpl struct {
 	eventID string
 }
 
-func eventsDB() string {
+func EventsDB() string {
 	return "events"
 }
 
-func eventDoc(id string) string {
-	return fmt.Sprintf("%s/%s", eventsDB(), id)
+func EventDoc(id string) string {
+	return fmt.Sprintf("%s/%s", EventsDB(), id)
 }
 
 func NewEventService(db FirestoreService[model.Event], eventID string) EventService {
@@ -32,7 +32,7 @@ func NewEventService(db FirestoreService[model.Event], eventID string) EventServ
 }
 
 func (service *eventServiceImpl) IsProcessed() bool {
-	event, err := service.db.Find(eventDoc(service.eventID), nil)
+	event, err := service.db.Find(EventDoc(service.eventID), nil)
 	if err != nil {
 		log.Printf("IsTransactionProcessed: %v", err)
 		return false
@@ -48,9 +48,9 @@ func (service *eventServiceImpl) SetProcessed(tx *firestore.Transaction) error {
 	}
 
 	if tx != nil {
-		return tx.Set(service.db.Doc(eventDoc(service.eventID)), doc)
+		return tx.Set(service.db.Doc(EventDoc(service.eventID)), doc)
 	} else {
-		_, err = service.db.Create(eventsDB(), &service.eventID, doc)
+		_, err = service.db.Create(EventsDB(), &service.eventID, doc)
 		return err
 	}
 }
@@ -62,6 +62,6 @@ func (service *eventServiceImpl) SetProcessedBatch(batch *firestore.BulkWriter) 
 		return err
 	}
 
-	_, err = batch.Set(service.db.Doc(eventDoc(service.eventID)), doc)
+	_, err = batch.Set(service.db.Doc(EventDoc(service.eventID)), doc)
 	return err
 }

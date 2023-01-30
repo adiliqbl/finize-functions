@@ -31,7 +31,7 @@ type FirestoreDB interface {
 type FirestoreService[T any] interface {
 	FirestoreDB
 	GetAll(collection string) ([]T, error)
-	Paginate(query firestore.Query, start uint, limit uint) ([]T, error)
+	Paginate(query firestore.Query, start int, limit int) ([]T, error)
 	Find(path string, tx *firestore.Transaction) (*T, error)
 	Create(collection string, id *string, doc map[string]interface{}) (*string, error)
 	Update(path string, doc map[string]interface{}) (bool, error)
@@ -94,7 +94,7 @@ func (store *firestoreDB[T]) Batch(run func() []data.DatabaseOperation) error {
 
 	batch := store.client.BulkWriter(store.ctx)
 
-	if store.eventID != "" {
+	if !util.NullOrEmpty(&store.eventID) {
 		events := NewEventService(NewFirestoreService[model.Event](store.ctx, store.client, store.eventID), store.eventID)
 		if err := events.SetProcessedBatch(batch); err != nil {
 			return err
@@ -112,7 +112,7 @@ func (store *firestoreDB[T]) Transaction(run func(tx *firestore.Transaction) []d
 			return nil
 		}
 
-		if store.eventID != "" {
+		if !util.NullOrEmpty(&store.eventID) {
 			events := NewEventService(NewFirestoreService[model.Event](store.ctx, store.client, store.eventID), store.eventID)
 			if err := events.SetProcessed(tx); err != nil {
 				return err
@@ -146,8 +146,8 @@ func (store *firestoreDB[T]) runQuery(query firestore.Query) ([]T, error) {
 	return docs, nil
 }
 
-func (store *firestoreDB[T]) Paginate(query firestore.Query, start uint, limit uint) ([]T, error) {
-	return store.runQuery(query.Offset(int(start)).Limit(int(limit)))
+func (store *firestoreDB[T]) Paginate(query firestore.Query, start int, limit int) ([]T, error) {
+	return store.runQuery(query.Offset(start).Limit(limit))
 }
 
 func (store *firestoreDB[T]) GetAll(collection string) ([]T, error) {
@@ -179,10 +179,10 @@ func (store *firestoreDB[T]) Create(collection string, id *string, doc map[strin
 	var ref *firestore.DocumentRef
 	if util.NullOrEmpty(id) {
 		ref = store.client.Collection(collection).NewDoc()
-		doc["id"] = ref.ID
+		doc[data.FieldId] = ref.ID
 	} else {
 		ref = store.client.Doc(collection + "/" + *id)
-		doc["id"] = ref.ID
+		doc[data.FieldId] = ref.ID
 	}
 
 	_, err := ref.Set(store.ctx, doc)

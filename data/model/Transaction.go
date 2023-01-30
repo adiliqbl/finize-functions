@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+const (
+	FieldDate = "date"
+)
+
 type TransactionEvent struct {
 	ID          StringValue          `json:"id"`
 	Name        StringValue          `json:"name"`

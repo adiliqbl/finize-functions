@@ -252,14 +252,15 @@ func NewTransactionEventMap(transaction model.TransactionEvent) map[string]inter
 	return doc
 }
 
-func NewRecurringTask(userID string, task model.TaskType, recurringTime uint, frequency model.Frequency, body map[string]interface{}) model.RecurringTask {
+func NewRecurringTask(userID string, task model.TaskType, recurringTime int, frequency model.Frequency, timezone string, lastDate *time.Time, body map[string]interface{}) model.RecurringTask {
 	return model.RecurringTask{
-		Id:            "",
 		UserID:        userID,
 		Type:          task,
 		RecurringTime: recurringTime,
+		Timezone:      timezone,
 		Frequency:     frequency,
-		Body:          body,
+		Data:          body,
+		LastDate:      lastDate,
 		CreatedAt:     time.Now().UTC(),
 	}
 }

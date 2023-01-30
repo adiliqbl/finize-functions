@@ -15,11 +15,11 @@ func TestTasksPagination(t *testing.T) {
 
 	for i := 0; i < 30; i++ {
 		testTask := fake.NewRecurringTask("userId", model.CreateTransaction,
-			3, model.Weekly, map[string]interface{}{"test": "value"})
+			3, model.Weekly, "zone", nil, map[string]interface{}{"test": "value"})
 		_, _ = database.Create("tasks", nil, fake.MapTo[map[string]interface{}](testTask))
 	}
 
-	tasks, err := taskService.PaginateTasks(0, 500)
+	tasks, err := taskService.Paginate(0, 500)
 
 	assert.True(t, err == nil)
 	assert.True(t, tasks != nil)

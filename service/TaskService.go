@@ -3,25 +3,30 @@ package service
 import (
 	"cloud.google.com/go/firestore"
 	"finize-functions.app/data/model"
+	"fmt"
 )
 
 type TaskService interface {
-	PaginateTasks(start uint, limit uint) ([]model.RecurringTask, error)
+	Paginate(start int, limit int) ([]model.RecurringTask, error)
 }
 
 type taskServiceImpl struct {
 	db FirestoreService[model.RecurringTask]
 }
 
-func tasksDB() string {
+func TasksDB() string {
 	return "tasks"
+}
+
+func TaskDoc(id string) string {
+	return fmt.Sprintf("%s/%s", TasksDB(), id)
 }
 
 func NewTaskService(db FirestoreService[model.RecurringTask]) TaskService {
 	return &taskServiceImpl{db: db}
 }
 
-func (service *taskServiceImpl) PaginateTasks(start uint, limit uint) ([]model.RecurringTask, error) {
-	query := service.db.Collection(tasksDB()).OrderBy(model.FieldCreatedAt, firestore.Desc)
+func (service *taskServiceImpl) Paginate(start int, limit int) ([]model.RecurringTask, error) {
+	query := service.db.Collection(TasksDB()).OrderBy(model.FieldCreatedAt, firestore.Desc)
 	return service.db.Paginate(query, start, limit)
 }
