@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"finize-functions.app/functions"
 	"finize-functions.app/service"
+	"finize-functions.app/util"
 	"fmt"
 	"log"
 	"net/http"
@@ -41,5 +42,19 @@ func GetExchangeRate(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusOK)
 		w.Write(json)
+	}
+}
+
+//goland:noinspection GoUnusedExportedFunction
+func ProcessRecurringTasks(w http.ResponseWriter, _ *http.Request) {
+	factory := service.NewServiceFactory(context.Background(), "", "")
+	err := functions.ProcessRecurringTasks(factory, util.NewClock())
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Processing Failed: %v", err)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, "Processing Completed")
 	}
 }
