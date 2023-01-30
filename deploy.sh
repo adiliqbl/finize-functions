@@ -27,6 +27,7 @@ gcloud functions deploy TransactionDeleted \
 gcloud functions deploy ProcessRecurringTasks \
   --entry-point "ProcessRecurringTasks" \
   --runtime $RUNTIME \
+  --region europe-west1 \
   --trigger-http \
   --timeout 540s
 
@@ -34,5 +35,6 @@ gcloud functions deploy GetExchangeRate \
   --entry-point "GetExchangeRate" \
   --set-secrets 'EXCHANGE_RATES_API=EXCHANGE_RATES_API:1' \
   --runtime $RUNTIME \
+  --region europe-west1 \
   --trigger-http \
   --timeout 180s
