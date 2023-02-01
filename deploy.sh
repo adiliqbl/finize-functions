@@ -2,6 +2,7 @@
 
 RUNTIME="go119"
 PROJECT_ID=$1
+SERVICE_ACCOUNT=$2
 
 gcloud functions deploy TransactionCreated \
   --entry-point "OnTransactionCreated" \
@@ -38,3 +39,15 @@ gcloud functions deploy GetExchangeRate \
   --region europe-west1 \
   --trigger-http \
   --timeout 180s
+
+if [ -n "$SERVICE_ACCOUNT" ]; then
+  gcloud scheduler jobs create http ProcessRecurringTasks \
+    --schedule="0 1 * * *" \
+    --uri="https://europe-west1-${PROJECT_ID}.cloudfunctions.net/ProcessRecurringTasks/" \
+    --http-method=POST \
+    --oidc-service-account-email="$SERVICE_ACCOUNT" \
+    --oidc-token-audience="https://europe-west1-${PROJECT_ID}.cloudfunctions.net/ProcessRecurringTasks" \
+    --project="${PROJECT_ID}" \
+    --time-zone="Etc/UTC" \
+    --attempt-deadline=1800s
+fi
