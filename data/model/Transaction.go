@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	FieldDate = "date"
+	FieldDate          = "date"
+	FieldRecurringTask = "recurringTask"
 )
 
 type TransactionEvent struct {
@@ -19,6 +20,7 @@ type TransactionEvent struct {
 	AccountTo   ReferenceValue       `json:"accountTo,omitempty"`
 	AccountFrom ReferenceValue       `json:"accountFrom,omitempty"`
 	Budget      ReferenceValue       `json:"budget,omitempty"`
+	Task        ReferenceValue       `json:"recurringTask,omitempty"`
 	Category    ArrayValue[string]   `json:"category"`
 	Date        TimestampValue       `json:"date"`
 }
@@ -33,6 +35,7 @@ type Transaction struct {
 	AccountTo   *string   `json:"accountTo,omitempty"`
 	AccountFrom *string   `json:"accountFrom,omitempty"`
 	Budget      *string   `json:"budget,omitempty"`
+	Task        *string   `json:"recurringTask,omitempty"`
 	Category    []string  `json:"category"`
 	Date        time.Time `json:"date"`
 }

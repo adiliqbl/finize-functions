@@ -68,6 +68,7 @@ func ProcessRecurringTasks(factory service.Factory, clock util.Clock) error {
 					date := today.UTC()
 					task.Data[data.FieldId] = t.ID
 					task.Data[model.FieldDate] = today.UTC()
+					task.Data[model.FieldRecurringTask] = task.Id
 
 					ops = append(ops, data.DatabaseOperation{
 						Ref:  database.Doc(service.TransactionDoc(task.UserID, t.ID)),

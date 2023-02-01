@@ -59,7 +59,9 @@ func TestRecurringTasks(t *testing.T) {
 	assert.Equal(t, 1, len(user2))
 	assert.Equal(t, 1, len(user5))
 	assert.True(t, !util.NullOrEmpty(&user2[0].ID))
+	assert.True(t, !util.NullOrEmpty(user2[0].Task))
 	assert.True(t, !util.NullOrEmpty(&user5[0].ID))
+	assert.True(t, !util.NullOrEmpty(user5[0].Task))
 
 	// Ignore Processing
 	user3, _ := transactions.GetAll(services.TransactionsDB("user3"))
