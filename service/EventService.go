@@ -11,7 +11,7 @@ import (
 type EventService interface {
 	IsProcessed() bool
 	SetProcessed(tx *firestore.Transaction) error
-	SetProcessedInBatch(batch *firestore.BulkWriter) error
+	SetProcessedBatch(batch *firestore.BulkWriter) error
 }
 
 type eventServiceImpl struct {
@@ -19,12 +19,12 @@ type eventServiceImpl struct {
 	eventID string
 }
 
-func eventsDB() string {
+func EventsDB() string {
 	return "events"
 }
 
-func eventDoc(id string) string {
-	return fmt.Sprintf("%s/%s", eventsDB(), id)
+func EventDoc(id string) string {
+	return fmt.Sprintf("%s/%s", EventsDB(), id)
 }
 
 func NewEventService(db FirestoreService[model.Event], eventID string) EventService {
@@ -32,9 +32,9 @@ func NewEventService(db FirestoreService[model.Event], eventID string) EventServ
 }
 
 func (service *eventServiceImpl) IsProcessed() bool {
-	event, err := service.db.Find(eventDoc(service.eventID), nil)
+	event, err := service.db.Find(EventDoc(service.eventID), nil)
 	if err != nil {
-		log.Fatalf("IsTransactionProcessed: %v", err)
+		log.Printf("IsTransactionProcessed: %v", err)
 		return false
 	}
 	return event.Processed
@@ -48,20 +48,20 @@ func (service *eventServiceImpl) SetProcessed(tx *firestore.Transaction) error {
 	}
 
 	if tx != nil {
-		return tx.Set(service.db.Doc(eventDoc(service.eventID)), doc)
+		return tx.Set(service.db.Doc(EventDoc(service.eventID)), doc)
 	} else {
-		_, err = service.db.Create(eventsDB(), &service.eventID, doc)
+		_, err = service.db.Create(EventsDB(), &service.eventID, doc)
 		return err
 	}
 }
 
-func (service *eventServiceImpl) SetProcessedInBatch(batch *firestore.BulkWriter) error {
+func (service *eventServiceImpl) SetProcessedBatch(batch *firestore.BulkWriter) error {
 	doc, err := util.MapTo[map[string]interface{}](model.Event{Processed: true})
 	if err != nil {
 		log.Fatalf("SetProcessed – Failed to convert event to map: %v", err)
 		return err
 	}
 
-	_, err = batch.Set(service.db.Doc(eventDoc(service.eventID)), doc)
+	_, err = batch.Set(service.db.Doc(EventDoc(service.eventID)), doc)
 	return err
 }

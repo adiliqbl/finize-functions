@@ -74,8 +74,3 @@ func OnTransactionDeleted(ctx context.Context, e data.FirestoreEvent[model.Trans
 	}
 	return functions.OnTransactionDeleted(factory, transaction)
 }
-
-//goland:noinspection GoUnusedExportedFunction,GoUnusedParameter
-func GetExchangeRate(ctx context.Context) error {
-	return nil
-}

@@ -3,18 +3,20 @@ package service
 import (
 	"context"
 	services "finize-functions.app/service"
+	"finize-functions.app/tests"
 	"finize-functions.app/tests/fake"
 	"fmt"
 	"os"
 	"testing"
 )
 
-var database services.FirestoreDB
 var userService services.UserService
 var eventService services.EventService
+var taskService services.TaskService
 var budgetService services.BudgetService
 var accountService services.AccountService
 var transactionService services.TransactionService
+var exchangeRateService services.ExchangeRateService
 
 func setup() {
 	setupFirestore()
@@ -41,10 +43,13 @@ func setupFirestore() {
 	fake.InitTestFirestore()
 
 	factory := fake.NewServiceFactory(context.Background(), "test-user")
-	database = factory.Firestore()
 	userService = factory.UserService()
 	eventService = factory.EventService()
+	taskService = factory.TaskService()
 	budgetService = factory.BudgetService()
 	accountService = factory.AccountService()
 	transactionService = factory.TransactionService()
+	exchangeRateService = factory.ExchangeRateService()
+
+	tests.ClearDatabase()
 }

@@ -15,12 +15,12 @@ type userServiceImpl struct {
 	db FirestoreService[model.User]
 }
 
-func usersDB() string {
+func UsersDB() string {
 	return "users"
 }
 
-func userDoc(id string) string {
-	return fmt.Sprintf("%s/%s", usersDB(), id)
+func UserDoc(id string) string {
+	return fmt.Sprintf("%s/%s", UsersDB(), id)
 }
 
 func NewUserService(db FirestoreService[model.User]) UserService {
@@ -28,18 +28,18 @@ func NewUserService(db FirestoreService[model.User]) UserService {
 }
 
 func (service *userServiceImpl) FindByID(id string, tx *firestore.Transaction) (*model.User, error) {
-	return service.db.Find(userDoc(id), tx)
+	return service.db.Find(UserDoc(id), tx)
 }
 
 func (service *userServiceImpl) Create(user model.User) (*string, error) {
 	data, _ := util.MapTo[map[string]interface{}](user)
-	return service.db.Create(usersDB(), nil, data)
+	return service.db.Create(UsersDB(), nil, data)
 }
 
 func (service *userServiceImpl) Update(id string, doc map[string]interface{}) (bool, error) {
-	return service.db.Update(userDoc(id), doc)
+	return service.db.Update(UserDoc(id), doc)
 }
 
 func (service *userServiceImpl) Delete(id string) (bool, error) {
-	return service.db.Delete(userDoc(id))
+	return service.db.Delete(UserDoc(id))
 }

@@ -7,13 +7,13 @@ import (
 	"time"
 )
 
-func mapTo[T any](object any) T {
+func MapTo[T any](object any) T {
 	obj, _ := util.MapTo[T](object)
 	return obj
 }
 
 func NewUser(obj model.UserEvent) model.User {
-	return mapTo[model.User](obj)
+	return MapTo[model.User](obj)
 }
 
 func NewUserEvent(id string, name string, email string) model.UserEvent {
@@ -39,7 +39,7 @@ func NewUserEventMap(user model.UserEvent) map[string]interface{} {
 }
 
 func NewBudget(obj model.BudgetEvent) model.Budget {
-	return mapTo[model.Budget](obj)
+	return MapTo[model.Budget](obj)
 }
 
 func NewBudgetEvent(id string, name string, limit float64) model.BudgetEvent {
@@ -65,7 +65,7 @@ func NewBudgetEventMap(budget model.BudgetEvent) map[string]interface{} {
 }
 
 func NewAccount(obj model.AccountEvent) model.Account {
-	return mapTo[model.Account](obj)
+	return MapTo[model.Account](obj)
 }
 
 func NewAccountEvent(id string, name string, balance float64, budget *string) model.AccountEvent {
@@ -103,7 +103,7 @@ func NewAccountEventMap(account model.AccountEvent) map[string]interface{} {
 }
 
 func NewTransaction(obj model.TransactionEvent) model.Transaction {
-	return mapTo[model.Transaction](obj)
+	return MapTo[model.Transaction](obj)
 }
 
 func NewTransactionEvent(id string, name string, amount float64, amountLocal float64, amountValue float64, date time.Time, accountTo *string, accountFrom *string, budget *string) model.TransactionEvent {
@@ -250,4 +250,17 @@ func NewTransactionEventMap(transaction model.TransactionEvent) map[string]inter
 	}
 
 	return doc
+}
+
+func NewRecurringTask(userID string, task model.TaskType, recurringTime int, frequency model.Frequency, timezone string, lastDate *time.Time, body map[string]interface{}) model.RecurringTask {
+	return model.RecurringTask{
+		UserID:        userID,
+		Type:          task,
+		RecurringTime: recurringTime,
+		Timezone:      timezone,
+		Frequency:     frequency,
+		Data:          body,
+		LastDate:      lastDate,
+		CreatedAt:     time.Now().UTC(),
+	}
 }

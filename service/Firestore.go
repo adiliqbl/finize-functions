@@ -21,23 +21,28 @@ type firestoreDB[T any] struct {
 	eventID string
 }
 
+type FirestoreDB interface {
+	Doc(path string) *firestore.DocumentRef
+	Collection(collection string) *firestore.CollectionRef
+	Batch(run func() []data.DatabaseOperation) error
+	Transaction(run func(tx *firestore.Transaction) []data.DatabaseOperation) error
+}
+
 type FirestoreService[T any] interface {
+	FirestoreDB
+	GetAll(collection string) ([]T, error)
+	Paginate(query firestore.Query, start int, limit int) ([]T, error)
 	Find(path string, tx *firestore.Transaction) (*T, error)
 	Create(collection string, id *string, doc map[string]interface{}) (*string, error)
 	Update(path string, doc map[string]interface{}) (bool, error)
 	Delete(path string) (bool, error)
-
-	Doc(path string) *firestore.DocumentRef
-}
-
-type FirestoreDB interface {
-	Doc(path string) *firestore.DocumentRef
-	Collection(collection string) *firestore.CollectionRef
-	Batch(run func(batch *firestore.BulkWriter) []data.TransactionOperation) error
-	Transaction(run func(tx *firestore.Transaction) []data.TransactionOperation) error
 }
 
 func InitFirestore(ctx context.Context) error {
+	if firestoreDatabase != nil {
+		return nil
+	}
+
 	// Use the application default credentials.
 	conf := &firebase.Config{ProjectID: os.Getenv("GOOGLE_CLOUD_PROJECT")}
 
@@ -80,29 +85,73 @@ func (store *firestoreDB[T]) Collection(path string) *firestore.CollectionRef {
 	return store.client.Collection(path)
 }
 
-func (store *firestoreDB[T]) Batch(run func(batch *firestore.BulkWriter) []data.TransactionOperation) error {
-	batch := store.client.BulkWriter(store.ctx)
-	ops := run(batch)
+func (store *firestoreDB[T]) Batch(run func() []data.DatabaseOperation) error {
+	ops := run()
 
-	events := NewEventService(NewFirestoreService[model.Event](store.ctx, store.client, store.eventID), store.eventID)
-	if err := events.SetProcessedInBatch(batch); err != nil {
-		return err
+	if len(ops) == 0 {
+		return nil
 	}
 
-	return data.Perform(batch, ops)
+	batch := store.client.BulkWriter(store.ctx)
+
+	if !util.NullOrEmpty(&store.eventID) {
+		events := NewEventService(NewFirestoreService[model.Event](store.ctx, store.client, store.eventID), store.eventID)
+		if err := events.SetProcessedBatch(batch); err != nil {
+			return err
+		}
+	}
+
+	return data.CommitBatch(batch, ops)
 }
 
-func (store *firestoreDB[T]) Transaction(run func(tx *firestore.Transaction) []data.TransactionOperation) error {
+func (store *firestoreDB[T]) Transaction(run func(tx *firestore.Transaction) []data.DatabaseOperation) error {
 	return store.client.RunTransaction(store.ctx, func(ctx context.Context, tx *firestore.Transaction) error {
 		ops := run(tx)
 
-		events := NewEventService(NewFirestoreService[model.Event](store.ctx, store.client, store.eventID), store.eventID)
-		if err := events.SetProcessed(tx); err != nil {
-			return err
+		if len(ops) == 0 {
+			return nil
 		}
 
-		return data.Commit(tx, ops)
+		if !util.NullOrEmpty(&store.eventID) {
+			events := NewEventService(NewFirestoreService[model.Event](store.ctx, store.client, store.eventID), store.eventID)
+			if err := events.SetProcessed(tx); err != nil {
+				return err
+			}
+		}
+
+		return data.CommitTransaction(tx, ops)
 	})
+}
+
+func (store *firestoreDB[T]) runQuery(query firestore.Query) ([]T, error) {
+	iterator := query.Documents(store.ctx)
+	snapshots, err := iterator.GetAll()
+
+	if err != nil {
+		log.Printf("Failed to get all documents: %v", err)
+	}
+
+	var docs []T
+	for _, snap := range snapshots {
+		doc, err := util.MapTo[T](snap.Data())
+
+		if err != nil {
+			log.Printf("Failed to parse task: %v", err)
+			return nil, err
+		}
+
+		docs = append(docs, doc)
+	}
+
+	return docs, nil
+}
+
+func (store *firestoreDB[T]) Paginate(query firestore.Query, start int, limit int) ([]T, error) {
+	return store.runQuery(query.Offset(start).Limit(limit))
+}
+
+func (store *firestoreDB[T]) GetAll(collection string) ([]T, error) {
+	return store.runQuery(store.client.Collection(collection).Query)
 }
 
 func (store *firestoreDB[T]) Find(path string, tx *firestore.Transaction) (*T, error) {
@@ -130,9 +179,10 @@ func (store *firestoreDB[T]) Create(collection string, id *string, doc map[strin
 	var ref *firestore.DocumentRef
 	if util.NullOrEmpty(id) {
 		ref = store.client.Collection(collection).NewDoc()
-		doc["id"] = ref.ID
+		doc[data.FieldId] = ref.ID
 	} else {
 		ref = store.client.Doc(collection + "/" + *id)
+		doc[data.FieldId] = ref.ID
 	}
 
 	_, err := ref.Set(store.ctx, doc)

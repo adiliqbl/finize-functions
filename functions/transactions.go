@@ -13,8 +13,8 @@ import (
 func OnTransactionCreated(factory service.Factory, transaction model.Transaction) error {
 	accounts := factory.AccountService()
 
-	return factory.Firestore().Transaction(func(tx *firestore.Transaction) []data.TransactionOperation {
-		var ops []data.TransactionOperation
+	return factory.Firestore().Transaction(func(tx *firestore.Transaction) []data.DatabaseOperation {
+		var ops []data.DatabaseOperation
 
 		if !util.NullOrEmpty(transaction.AccountFrom) {
 			accountFrom, err := accounts.FindByID(*transaction.AccountFrom, tx)
@@ -23,7 +23,7 @@ func OnTransactionCreated(factory service.Factory, transaction model.Transaction
 			}
 			accountFrom.Balance = accountFrom.Balance - transaction.AmountFrom.Amount
 
-			ops = append(ops, data.TransactionOperation{
+			ops = append(ops, data.DatabaseOperation{
 				Ref: accounts.Doc(accountFrom.ID),
 				Data: []firestore.Update{{
 					Path:  model.FieldBalance,
@@ -39,7 +39,7 @@ func OnTransactionCreated(factory service.Factory, transaction model.Transaction
 			}
 			accountTo.Balance = accountTo.Balance + transaction.AmountTo.Amount
 
-			ops = append(ops, data.TransactionOperation{
+			ops = append(ops, data.DatabaseOperation{
 				Ref: accounts.Doc(accountTo.ID),
 				Data: []firestore.Update{{
 					Path:  model.FieldBalance,
@@ -64,7 +64,7 @@ func OnTransactionUpdated(factory service.Factory, oldTransaction model.Transact
 
 	accounts := factory.AccountService()
 
-	return factory.Firestore().Transaction(func(tx *firestore.Transaction) []data.TransactionOperation {
+	return factory.Firestore().Transaction(func(tx *firestore.Transaction) []data.DatabaseOperation {
 		mAccounts := map[string]model.Account{}
 
 		if oldTransaction.AccountFrom != nil {
@@ -119,10 +119,10 @@ func OnTransactionUpdated(factory service.Factory, oldTransaction model.Transact
 			mAccounts[account.ID] = account
 		}
 
-		var ops []data.TransactionOperation
+		var ops []data.DatabaseOperation
 
 		for _, account := range mAccounts {
-			ops = append(ops, data.TransactionOperation{
+			ops = append(ops, data.DatabaseOperation{
 				Ref: accounts.Doc(account.ID),
 				Data: []firestore.Update{{
 					Path:  model.FieldBalance,
@@ -138,8 +138,8 @@ func OnTransactionUpdated(factory service.Factory, oldTransaction model.Transact
 func OnTransactionDeleted(factory service.Factory, transaction model.Transaction) error {
 	accounts := factory.AccountService()
 
-	return factory.Firestore().Transaction(func(tx *firestore.Transaction) []data.TransactionOperation {
-		var ops []data.TransactionOperation
+	return factory.Firestore().Transaction(func(tx *firestore.Transaction) []data.DatabaseOperation {
+		var ops []data.DatabaseOperation
 
 		if transaction.AccountFrom != nil {
 			account, err := accounts.FindByID(*transaction.AccountFrom, tx)
@@ -148,7 +148,7 @@ func OnTransactionDeleted(factory service.Factory, transaction model.Transaction
 			}
 			account.Balance = account.Balance + transaction.AmountFrom.Amount
 
-			ops = append(ops, data.TransactionOperation{
+			ops = append(ops, data.DatabaseOperation{
 				Ref: accounts.Doc(account.ID),
 				Data: []firestore.Update{{
 					Path:  model.FieldBalance,
@@ -164,7 +164,7 @@ func OnTransactionDeleted(factory service.Factory, transaction model.Transaction
 			}
 			account.Balance = account.Balance - transaction.AmountTo.Amount
 
-			ops = append(ops, data.TransactionOperation{
+			ops = append(ops, data.DatabaseOperation{
 				Ref: accounts.Doc(account.ID),
 				Data: []firestore.Update{{
 					Path:  model.FieldBalance,

@@ -16,12 +16,12 @@ type budgetServiceImpl struct {
 	userID string
 }
 
-func budgetsDB(userID string) string {
+func BudgetsDB(userID string) string {
 	return fmt.Sprintf("user-budgets/%s/budgets", userID)
 }
 
-func budgetDoc(userID string, id string) string {
-	return fmt.Sprintf("%s/%s", budgetsDB(userID), id)
+func BudgetDoc(userID string, id string) string {
+	return fmt.Sprintf("%s/%s", BudgetsDB(userID), id)
 }
 
 func NewBudgetService(db FirestoreService[model.Budget], userID string) BudgetService {
@@ -29,18 +29,18 @@ func NewBudgetService(db FirestoreService[model.Budget], userID string) BudgetSe
 }
 
 func (service *budgetServiceImpl) FindByID(id string, tx *firestore.Transaction) (*model.Budget, error) {
-	return service.db.Find(budgetDoc(service.userID, id), tx)
+	return service.db.Find(BudgetDoc(service.userID, id), tx)
 }
 
 func (service *budgetServiceImpl) Create(budget model.Budget) (*string, error) {
 	data, _ := util.MapTo[map[string]interface{}](budget)
-	return service.db.Create(budgetsDB(service.userID), nil, data)
+	return service.db.Create(BudgetsDB(service.userID), nil, data)
 }
 
 func (service *budgetServiceImpl) Update(id string, doc map[string]interface{}) (bool, error) {
-	return service.db.Update(budgetDoc(service.userID, id), doc)
+	return service.db.Update(BudgetDoc(service.userID, id), doc)
 }
 
 func (service *budgetServiceImpl) Delete(id string) (bool, error) {
-	return service.db.Delete(budgetDoc(service.userID, id))
+	return service.db.Delete(BudgetDoc(service.userID, id))
 }
