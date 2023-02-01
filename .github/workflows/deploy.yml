@@ -2,8 +2,9 @@ name: Deploy Functions
 
 on:
   workflow_run:
-    workflows: [ test ]
-    types: [ completed ]
+    workflows: [ "Test & Upload Results" ]
+    types:
+      - completed
     branches:
       - main
 
@@ -38,6 +39,6 @@ jobs:
         run: go get .
 
       - name: 'Deploy Functions'
-        run:
+        run: |
           chmod +x deploy.sh
-          ./deploy ${{ secrets.PROJECT_ID }}
+          ./deploy.sh "${{ secrets.PROJECT_ID }}"
