@@ -25,6 +25,8 @@ vendor/
 go.work
 
 finize-**.json
+*-firebase-*.json
+serviceAccountKey.json
 
 # Firebase
 *.log
