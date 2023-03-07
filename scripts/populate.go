@@ -43,7 +43,7 @@ func populateTransactionCategories(reset bool) {
 
 	// Remove all categories
 	if reset {
-		refs := store.Collection("transaction-categories").DocumentRefs(context.Background())
+		refs := store.Collection("finize-transaction-categories").DocumentRefs(context.Background())
 		docs, _ := refs.GetAll()
 		for _, doc := range docs {
 			doc.Delete(context.Background())
@@ -54,7 +54,7 @@ func populateTransactionCategories(reset bool) {
 	for _, category := range categories {
 		category := category.(map[string]interface{})
 		name := category["name"].(string)
-		path := fmt.Sprintf("transaction-categories/%s", name)
+		path := fmt.Sprintf("finize-transaction-categories/%s", name)
 		_, err = store.Doc(path).Set(context.Background(), category)
 
 		if err != nil {
