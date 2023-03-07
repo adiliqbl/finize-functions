@@ -108,10 +108,10 @@ func NewTransaction(obj model.TransactionEvent) model.Transaction {
 
 func NewTransactionEvent(id string, name string, amount float64, amountLocal float64, amountValue float64, date time.Time, accountTo *string, accountFrom *string, budget *string) model.TransactionEvent {
 	transaction := model.TransactionEvent{
-		ID:       data.StringValue{Value: &id},
-		Name:     data.StringValue{Value: &name},
-		Category: data.ArrayValue[string]{Value: &[]string{"One", "Two"}},
-		Date:     data.TimestampValue{Value: &date},
+		ID:         data.StringValue{Value: &id},
+		Name:       data.StringValue{Value: &name},
+		Categories: data.ArrayValue[string]{Value: &[]string{"One", "Two"}},
+		Date:       data.TimestampValue{Value: &date},
 		Amount: data.MapValue[model.MoneyEvent]{Value: util.Pointer(model.MoneyEvent{
 			Amount:   data.DoubleValue{Value: &amount},
 			Currency: data.StringValue{Value: util.Pointer("CURR")},
@@ -158,8 +158,8 @@ func NewTransactionEventMap(transaction model.TransactionEvent) map[string]inter
 		"name": map[string]interface{}{
 			"stringValue": transaction.Name.Value,
 		},
-		"category": map[string]interface{}{
-			"arrayValue": transaction.Category.Value,
+		"categories": map[string]interface{}{
+			"arrayValue": transaction.Categories.Value,
 		},
 		"date": map[string]interface{}{
 			"timestampValue": transaction.Date.Value,
