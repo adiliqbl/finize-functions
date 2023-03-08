@@ -34,3 +34,15 @@ func TestGetAccount(t *testing.T) {
 	account, _ = accountService.FindByID(testAccount.ID, nil)
 	assert.Equal(t, testAccount, *account)
 }
+
+func TestGetAccountsByBudget(t *testing.T) {
+	testBudget := fake.NewBudget(fake.NewBudgetEvent("", "name", 50.0))
+	budgetID, _ := budgetService.Create(testBudget)
+
+	_, _ = accountService.Create(fake.NewAccount(fake.NewAccountEvent("id1", "name", 50.0, budgetID)))
+	_, _ = accountService.Create(fake.NewAccount(fake.NewAccountEvent("id2", "name", 50.0, budgetID)))
+	_, _ = accountService.Create(fake.NewAccount(fake.NewAccountEvent("id3", "name", 50.0, nil)))
+
+	accounts, _ := accountService.FindByBudget(*budgetID)
+	assert.Equal(t, 2, len(accounts))
+}

@@ -25,6 +25,13 @@ gcloud functions deploy TransactionDeleted \
   --trigger-resource "projects/$PROJECT_ID/databases/(default)/documents/user-transactions/{userId}/transactions/{transactionId}" \
   --retry
 
+gcloud functions deploy OnBudgetDeleted \
+  --entry-point "OnBudgetDeleted" \
+  --runtime $RUNTIME \
+  --trigger-event "providers/cloud.firestore/eventTypes/document.delete" \
+  --trigger-resource "projects/$PROJECT_ID/databases/(default)/documents/user-budgets/{userId}/budgets/{budgetId}" \
+  --retry
+
 gcloud functions deploy ProcessRecurringTasks \
   --entry-point "ProcessRecurringTasks" \
   --runtime $RUNTIME \

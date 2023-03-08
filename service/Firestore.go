@@ -30,6 +30,8 @@ type FirestoreDB interface {
 
 type FirestoreService[T any] interface {
 	FirestoreDB
+	RunQuery(query firestore.Query) ([]T, error)
+
 	GetAll(collection string) ([]T, error)
 	Paginate(query firestore.Query, start int, limit int) ([]T, error)
 	Find(path string, tx *firestore.Transaction) (*T, error)
@@ -123,7 +125,7 @@ func (store *firestoreDB[T]) Transaction(run func(tx *firestore.Transaction) []d
 	})
 }
 
-func (store *firestoreDB[T]) runQuery(query firestore.Query) ([]T, error) {
+func (store *firestoreDB[T]) RunQuery(query firestore.Query) ([]T, error) {
 	iterator := query.Documents(store.ctx)
 	snapshots, err := iterator.GetAll()
 
@@ -147,11 +149,11 @@ func (store *firestoreDB[T]) runQuery(query firestore.Query) ([]T, error) {
 }
 
 func (store *firestoreDB[T]) Paginate(query firestore.Query, start int, limit int) ([]T, error) {
-	return store.runQuery(query.Offset(start).Limit(limit))
+	return store.RunQuery(query.Offset(start).Limit(limit))
 }
 
 func (store *firestoreDB[T]) GetAll(collection string) ([]T, error) {
-	return store.runQuery(store.client.Collection(collection).Query)
+	return store.RunQuery(store.client.Collection(collection).Query)
 }
 
 func (store *firestoreDB[T]) Find(path string, tx *firestore.Transaction) (*T, error) {

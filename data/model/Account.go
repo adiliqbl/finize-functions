@@ -4,6 +4,7 @@ import . "finize-functions.app/data"
 
 const (
 	FieldBalance = "balance"
+	FieldBudget  = "budget"
 )
 
 type AccountEvent struct {
