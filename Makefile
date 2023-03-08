@@ -6,8 +6,8 @@ emulator:
 
 test:
 	export FIRESTORE_EMULATOR_HOST="localhost:8080"
-	firebase emulators:exec --project=demo-project --only=firestore "go test ./tests/..."
+	firebase emulators:exec --project=demo-project --only=firestore "go test ./tests/... -p 1"
 
 test-report:
 	export FIRESTORE_EMULATOR_HOST="localhost:8080"
-	firebase emulators:exec --project=demo-project --only=firestore "go test ./tests/... -json"
+	firebase emulators:exec --project=demo-project --only=firestore "go test ./tests/... -json -p 1"
