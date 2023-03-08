@@ -74,3 +74,22 @@ func OnTransactionDeleted(ctx context.Context, e data.FirestoreEvent[model.Trans
 	}
 	return functions.OnTransactionDeleted(factory, transaction)
 }
+
+//goland:noinspection GoUnusedExportedFunction,GoUnusedParameter
+func OnBudgetDeleted(ctx context.Context, e data.FirestoreEvent[model.BudgetEvent]) error {
+	meta, err := metadata.FromContext(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get metadata %v", err)
+	}
+
+	factory := service.NewServiceFactory(ctx, meta.EventID, e.UserID())
+	if factory.EventService().IsProcessed() {
+		return nil
+	}
+
+	budget, err := util.MapTo[model.Budget](e.Value.Data)
+	if err != nil {
+		log.Fatalf("Failed to parse budget %v", err)
+	}
+	return functions.OnBudgetDeleted(factory, budget)
+}

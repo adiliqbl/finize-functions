@@ -22,4 +22,6 @@ deploy.sh
 # Firebase
 firebase.json
 
+/scripts
+
 #!include:.gitignore

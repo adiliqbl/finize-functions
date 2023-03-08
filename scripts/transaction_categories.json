@@ -1,0 +1,266 @@
+{
+  "categories": [
+    {
+      "name": "Misc",
+      "priority": 1
+    },
+    {
+      "name": "Income",
+      "priority": 1
+    },
+    {
+      "name": "Deposit",
+      "priority": 2
+    },
+    {
+      "name": "Transfer",
+      "priority": 1
+    },
+    {
+      "name": "ATM",
+      "priority": 1,
+      "hierarchy": [
+        "Withdrawal",
+        "Bank Fees"
+      ]
+    },
+    {
+      "name": "Withdrawal",
+      "priority": 2
+    },
+    {
+      "name": "Payment",
+      "priority": 5
+    },
+    {
+      "name": "Service",
+      "priority": 2
+    },
+    {
+      "name": "Refund",
+      "priority": 1
+    },
+    {
+      "name": "Loan",
+      "priority": 1
+    },
+    {
+      "name": "Rent",
+      "priority": 1
+    },
+    {
+      "name": "Installment",
+      "priority": 2,
+      "hierarchy": [
+        "Payment"
+      ]
+    },
+    {
+      "name": "Bill",
+      "priority": 3
+    },
+    {
+      "name": "Bank Fees",
+      "priority": 3,
+      "hierarchy": [
+        "Payment"
+      ]
+    },
+    {
+      "name": "Utilities",
+      "priority": 2,
+      "hierarchy": [
+        "Service"
+      ]
+    },
+    {
+      "name": "Automotive Maintenance",
+      "priority": 2,
+      "hierarchy": [
+        "Service"
+      ]
+    },
+    {
+      "name": "Car Wash",
+      "priority": 1,
+      "hierarchy": [
+        "Automotive Maintenance",
+        "Service"
+      ]
+    },
+    {
+      "name": "Cars & Bikes",
+      "priority": 1
+    },
+    {
+      "name": "Advertising",
+      "priority": 1,
+      "hierarchy": [
+        "Service"
+      ]
+    },
+    {
+      "name": "Fuel",
+      "priority": 1
+    },
+    {
+      "name": "Travel",
+      "priority": 3
+    },
+    {
+      "name": "Booking",
+      "priority": 2,
+      "hierarchy": [
+        "Travel"
+      ]
+    },
+    {
+      "name": "Hotels",
+      "priority": 1,
+      "hierarchy": [
+        "Travel"
+      ]
+    },
+    {
+      "name": "Transportation",
+      "priority": 2,
+      "hierarchy": [
+        "Travel"
+      ]
+    },
+    {
+      "name": "Tolls & Fees",
+      "priority": 1,
+      "hierarchy": [
+        "Travel"
+      ]
+    },
+    {
+      "name": "Car Rental",
+      "priority": 1,
+      "hierarchy": [
+        "Travel",
+        "Transportation"
+      ]
+    },
+    {
+      "name": "Construction",
+      "priority": 3
+    },
+    {
+      "name": "Subscription",
+      "priority": 2,
+      "hierarchy": [
+        "Bill"
+      ]
+    },
+    {
+      "name": "Community",
+      "priority": 2
+    },
+    {
+      "name": "Education",
+      "priority": 3
+    },
+    {
+      "name": "School Fees",
+      "priority": 2,
+      "hierarchy": [
+        "Education"
+      ]
+    },
+    {
+      "name": "Sports",
+      "priority": 1,
+      "hierarchy": [
+        "Recreation"
+      ]
+    },
+    {
+      "name": "Healthcare",
+      "priority": 1
+    },
+    {
+      "name": "Recreation",
+      "priority": 4
+    },
+    {
+      "name": "Entertainment",
+      "priority": 2,
+      "hierarchy": [
+        "Recreation"
+      ]
+    },
+    {
+      "name": "Grocery",
+      "priority": 2
+    },
+    {
+      "name": "Cosmetics",
+      "priority": 1,
+      "hierarchy": [
+        "Grocery"
+      ]
+    },
+    {
+      "name": "Shop",
+      "priority": 2,
+      "hide": true
+    },
+    {
+      "name": "Food & Drink",
+      "priority": 1,
+      "hierarchy": [
+        "Shops"
+      ]
+    },
+    {
+      "name": "Clothing & Accessories",
+      "priority": 1,
+      "hierarchy": [
+        "Shops"
+      ]
+    },
+    {
+      "name": "Jewelry and Watches",
+      "priority": 1,
+      "hierarchy": [
+        "Shops"
+      ]
+    },
+    {
+      "name": "Wedding",
+      "priority": 1,
+      "hierarchy": [
+        "Shops"
+      ]
+    },
+    {
+      "name": "Florists",
+      "priority": 1,
+      "hierarchy": [
+        "Shops"
+      ]
+    },
+    {
+      "name": "Gift",
+      "priority": 1
+    },
+    {
+      "name": "Computers & Electronics",
+      "priority": 1
+    },
+    {
+      "name": "Electronics",
+      "priority": 1
+    },
+    {
+      "name": "Stationery",
+      "priority": 1
+    },
+    {
+      "name": "Decoration",
+      "priority": 1
+    }
+  ]
+}

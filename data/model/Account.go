@@ -4,6 +4,7 @@ import . "finize-functions.app/data"
 
 const (
 	FieldBalance = "balance"
+	FieldBudget  = "budget"
 )
 
 type AccountEvent struct {
@@ -16,11 +17,10 @@ type AccountEvent struct {
 }
 
 type Account struct {
-	ID        string  `json:"id"`
-	Name      string  `json:"name"`
-	Balance   float64 `json:"balance"`
-	Type      string  `json:"type"`
-	Currency  string  `json:"currency"`
-	Budget    *string `json:"budget,omitempty"`
-	Processed *string `json:"processed,omitempty"`
+	ID       string  `json:"id"`
+	Name     string  `json:"name"`
+	Balance  float64 `json:"balance"`
+	Type     string  `json:"type"`
+	Currency string  `json:"currency"`
+	Budget   *string `json:"budget,omitempty"`
 }

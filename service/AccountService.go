@@ -9,6 +9,7 @@ import (
 
 type AccountService interface {
 	BaseService[model.Account]
+	FindByBudget(budget string) ([]model.Account, error)
 	Doc(id string) *firestore.DocumentRef
 }
 
@@ -35,6 +36,11 @@ func (service *accountServiceImpl) Doc(id string) *firestore.DocumentRef {
 
 func (service *accountServiceImpl) FindByID(id string, tx *firestore.Transaction) (*model.Account, error) {
 	return service.db.Find(AccountDoc(service.userID, id), tx)
+}
+
+func (service *accountServiceImpl) FindByBudget(budget string) ([]model.Account, error) {
+	query := service.db.Collection(AccountsDB(service.userID)).Where(model.FieldBudget, "==", budget)
+	return service.db.RunQuery(query)
 }
 
 func (service *accountServiceImpl) Create(account model.Account) (*string, error) {

@@ -21,7 +21,7 @@ type TransactionEvent struct {
 	AccountFrom ReferenceValue       `json:"accountFrom,omitempty"`
 	Budget      ReferenceValue       `json:"budget,omitempty"`
 	Task        ReferenceValue       `json:"recurringTask,omitempty"`
-	Category    ArrayValue[string]   `json:"category"`
+	Categories  ArrayValue[string]   `json:"categories"`
 	Date        TimestampValue       `json:"date"`
 }
 
@@ -36,6 +36,6 @@ type Transaction struct {
 	AccountFrom *string   `json:"accountFrom,omitempty"`
 	Budget      *string   `json:"budget,omitempty"`
 	Task        *string   `json:"recurringTask,omitempty"`
-	Category    []string  `json:"category"`
+	Categories  []string  `json:"categories"`
 	Date        time.Time `json:"date"`
 }
