@@ -61,7 +61,7 @@ func TestRecurringTasks(t *testing.T) {
 			15, model.Yearly, "Etc/GMT+5", nil, transaction1),
 	}
 	for i, testTask := range testTasks {
-		_, _ = database.Create("tasks", util.Pointer("task"+strconv.Itoa(i)), fake.MapTo[map[string]interface{}](testTask))
+		_, _ = database.Create(services.TasksDB(), util.Pointer("task"+strconv.Itoa(i)), fake.MapTo[map[string]interface{}](testTask))
 	}
 
 	err := functions.ProcessRecurringTasks(testFactory, fake.NewClock(2023, time.January, 15))

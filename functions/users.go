@@ -27,7 +27,7 @@ func OnUserUpdated(factory service.Factory, oldUser model.User, user model.User,
 			ops = append(ops, data.DatabaseOperation{
 				Ref: tasks.Doc(task.ID),
 				Data: []firestore.Update{{
-					Path:  model.FieldData + "." + model.FieldCurrency,
+					Path:  model.FieldData + "." + model.FieldAmountLocal + "." + model.FieldCurrency,
 					Value: user.Profile.Currency,
 				}},
 			})

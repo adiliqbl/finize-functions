@@ -32,12 +32,26 @@ gcloud functions deploy OnBudgetDeleted \
   --trigger-resource "projects/$PROJECT_ID/databases/(default)/documents/user-budgets/{userId}/budgets/{budgetId}" \
   --retry
 
+gcloud functions deploy OnAccountUpdated \
+  --entry-point "OnAccountUpdated" \
+  --runtime $RUNTIME \
+  --trigger-event "providers/cloud.firestore/eventTypes/document.update" \
+  --trigger-resource "projects/$PROJECT_ID/databases/(default)/documents/user-accounts/{userId}/accounts/{accountId}" \
+  --retry
+
+gcloud functions deploy OnUserUpdated \
+  --entry-point "OnUserUpdated" \
+  --runtime $RUNTIME \
+  --trigger-event "providers/cloud.firestore/eventTypes/document.update" \
+  --trigger-resource "projects/$PROJECT_ID/databases/(default)/documents/users/{userId}" \
+  --retry
+
 gcloud functions deploy ProcessRecurringTasks \
   --entry-point "ProcessRecurringTasks" \
   --runtime $RUNTIME \
   --region europe-west1 \
   --trigger-http \
-  --timeout 540s
+  --timeout 600s
 
 gcloud functions deploy GetExchangeRate \
   --entry-point "GetExchangeRate" \
