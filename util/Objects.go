@@ -15,3 +15,13 @@ func ValueOrNull[T any](ptr *T) interface{} {
 		return *ptr
 	}
 }
+
+func GenerateKeywords(text string) []string {
+	var keywords []string
+	for i := 0; i < len(text); i++ {
+		for j := i + 1; j <= len(text); j++ {
+			keywords = append(keywords, text[i:j])
+		}
+	}
+	return keywords
+}

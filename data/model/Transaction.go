@@ -6,6 +6,7 @@ import (
 )
 
 const (
+	FieldName          = "name"
 	FieldDate          = "date"
 	FieldRecurringTask = "recurringTask"
 	FieldAccountTo     = "accountTo"

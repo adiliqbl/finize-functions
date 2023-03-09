@@ -3,8 +3,9 @@ package model
 import . "finize-functions.app/data"
 
 const (
-	FieldBalance = "balance"
-	FieldBudget  = "budget"
+	FieldBalance  = "balance"
+	FieldKeywords = "keywords"
+	FieldBudget   = "budget"
 )
 
 type AccountEvent struct {
