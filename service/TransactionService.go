@@ -9,6 +9,7 @@ import (
 
 type TransactionService interface {
 	BaseService[model.Transaction]
+	Doc(id string) *firestore.DocumentRef
 }
 
 type transactionServiceImpl struct {
@@ -26,6 +27,10 @@ func TransactionDoc(userID string, id string) string {
 
 func NewTransactionService(db FirestoreService[model.Transaction], userID string) TransactionService {
 	return &transactionServiceImpl{db: db, userID: userID}
+}
+
+func (service *transactionServiceImpl) Doc(id string) *firestore.DocumentRef {
+	return service.db.Doc(TransactionDoc(service.userID, id))
 }
 
 func (service *transactionServiceImpl) FindByID(id string, tx *firestore.Transaction) (*model.Transaction, error) {
