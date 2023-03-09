@@ -83,70 +83,8 @@ func OnTransactionUpdated(factory service.Factory, oldTransaction model.Transact
 		}
 
 		if updateAccount {
-			accounts := factory.AccountService()
-			mAccounts := map[string]model.Account{}
-
-			if oldTransaction.AccountFrom != nil {
-				account, err := accounts.FindByID(*oldTransaction.AccountFrom, tx)
-				if err != nil {
-					log.Fatalf("AccountService.FindByID: %v", err)
-				}
-				account.Balance = account.Balance + oldTransaction.AmountFrom.Amount
-				mAccounts[account.ID] = *account
-			}
-
-			if oldTransaction.AccountTo != nil {
-				account, err := accounts.FindByID(*oldTransaction.AccountTo, tx)
-				if err != nil {
-					log.Fatalf("AccountService.FindByID: %v", err)
-				}
-				account.Balance = account.Balance - oldTransaction.AmountTo.Amount
-				mAccounts[account.ID] = *account
-			}
-
-			if transaction.AccountFrom != nil {
-				var account model.Account
-
-				if mAccount, ok := mAccounts[*transaction.AccountFrom]; ok {
-					account = mAccount
-				} else {
-					apiAccount, err := accounts.FindByID(*transaction.AccountFrom, tx)
-					if err != nil {
-						log.Fatalf("AccountService.FindByID: %v", err)
-					}
-					account = *apiAccount
-				}
-
-				account.Balance = account.Balance - transaction.AmountFrom.Amount
-				mAccounts[account.ID] = account
-			}
-
-			if transaction.AccountTo != nil {
-				var account model.Account
-
-				if mAccount, ok := mAccounts[*transaction.AccountTo]; ok {
-					account = mAccount
-				} else {
-					apiAccount, err := accounts.FindByID(*transaction.AccountTo, tx)
-					if err != nil {
-						log.Fatalf("AccountService.FindByID: %v", err)
-					}
-					account = *apiAccount
-				}
-
-				account.Balance = account.Balance + transaction.AmountTo.Amount
-				mAccounts[account.ID] = account
-			}
-
-			for _, account := range mAccounts {
-				ops = append(ops, data.DatabaseOperation{
-					Ref: accounts.Doc(account.ID),
-					Data: []firestore.Update{{
-						Path:  model.FieldBalance,
-						Value: account.Balance,
-					}},
-				})
-			}
+			accountOps := updateAccountBalances(factory, oldTransaction, transaction, tx)
+			ops = append(ops, accountOps...)
 		}
 
 		return ops
@@ -193,4 +131,75 @@ func OnTransactionDeleted(factory service.Factory, transaction model.Transaction
 
 		return ops
 	})
+}
+
+func updateAccountBalances(factory service.Factory, oldTransaction model.Transaction, transaction model.Transaction, tx *firestore.Transaction) []data.DatabaseOperation {
+	accounts := factory.AccountService()
+	mAccounts := map[string]model.Account{}
+
+	var ops []data.DatabaseOperation
+
+	if oldTransaction.AccountFrom != nil {
+		account, err := accounts.FindByID(*oldTransaction.AccountFrom, tx)
+		if err != nil {
+			log.Fatalf("AccountService.FindByID: %v", err)
+		}
+		account.Balance = account.Balance + oldTransaction.AmountFrom.Amount
+		mAccounts[account.ID] = *account
+	}
+
+	if oldTransaction.AccountTo != nil {
+		account, err := accounts.FindByID(*oldTransaction.AccountTo, tx)
+		if err != nil {
+			log.Fatalf("AccountService.FindByID: %v", err)
+		}
+		account.Balance = account.Balance - oldTransaction.AmountTo.Amount
+		mAccounts[account.ID] = *account
+	}
+
+	if transaction.AccountFrom != nil {
+		var account model.Account
+
+		if mAccount, ok := mAccounts[*transaction.AccountFrom]; ok {
+			account = mAccount
+		} else {
+			apiAccount, err := accounts.FindByID(*transaction.AccountFrom, tx)
+			if err != nil {
+				log.Fatalf("AccountService.FindByID: %v", err)
+			}
+			account = *apiAccount
+		}
+
+		account.Balance = account.Balance - transaction.AmountFrom.Amount
+		mAccounts[account.ID] = account
+	}
+
+	if transaction.AccountTo != nil {
+		var account model.Account
+
+		if mAccount, ok := mAccounts[*transaction.AccountTo]; ok {
+			account = mAccount
+		} else {
+			apiAccount, err := accounts.FindByID(*transaction.AccountTo, tx)
+			if err != nil {
+				log.Fatalf("AccountService.FindByID: %v", err)
+			}
+			account = *apiAccount
+		}
+
+		account.Balance = account.Balance + transaction.AmountTo.Amount
+		mAccounts[account.ID] = account
+	}
+
+	for _, account := range mAccounts {
+		ops = append(ops, data.DatabaseOperation{
+			Ref: accounts.Doc(account.ID),
+			Data: []firestore.Update{{
+				Path:  model.FieldBalance,
+				Value: account.Balance,
+			}},
+		})
+	}
+
+	return ops
 }
