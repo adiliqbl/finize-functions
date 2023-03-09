@@ -25,21 +25,21 @@ gcloud functions deploy TransactionDeleted \
   --trigger-resource "projects/$PROJECT_ID/databases/(default)/documents/user-transactions/{userId}/transactions/{transactionId}" \
   --retry
 
-gcloud functions deploy OnBudgetDeleted \
+gcloud functions deploy BudgetDeleted \
   --entry-point "OnBudgetDeleted" \
   --runtime $RUNTIME \
   --trigger-event "providers/cloud.firestore/eventTypes/document.delete" \
   --trigger-resource "projects/$PROJECT_ID/databases/(default)/documents/user-budgets/{userId}/budgets/{budgetId}" \
   --retry
 
-gcloud functions deploy OnAccountUpdated \
+gcloud functions deploy AccountUpdated \
   --entry-point "OnAccountUpdated" \
   --runtime $RUNTIME \
   --trigger-event "providers/cloud.firestore/eventTypes/document.update" \
   --trigger-resource "projects/$PROJECT_ID/databases/(default)/documents/user-accounts/{userId}/accounts/{accountId}" \
   --retry
 
-gcloud functions deploy OnUserUpdated \
+gcloud functions deploy UserUpdated \
   --entry-point "OnUserUpdated" \
   --runtime $RUNTIME \
   --trigger-event "providers/cloud.firestore/eventTypes/document.update" \
