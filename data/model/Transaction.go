@@ -8,6 +8,12 @@ import (
 const (
 	FieldDate          = "date"
 	FieldRecurringTask = "recurringTask"
+	FieldAccountTo     = "accountTo"
+	FieldAccountFrom   = "accountFrom"
+	FieldAmount        = "amount"
+	FieldAmountTo      = "amountTo"
+	FieldAmountFrom    = "amountFrom"
+	FieldAmountLocal   = "amountLocal"
 )
 
 type TransactionEvent struct {
@@ -16,7 +22,7 @@ type TransactionEvent struct {
 	Amount      MapValue[MoneyEvent] `json:"amount"`
 	AmountTo    MapValue[MoneyEvent] `json:"amountTo,omitempty"`
 	AmountFrom  MapValue[MoneyEvent] `json:"amountFrom,omitempty"`
-	AmountLocal MapValue[MoneyEvent] `json:"amountLocal"`
+	AmountLocal MapValue[MoneyEvent] `json:"amountLocal,omitempty"`
 	AccountTo   ReferenceValue       `json:"accountTo,omitempty"`
 	AccountFrom ReferenceValue       `json:"accountFrom,omitempty"`
 	Budget      ReferenceValue       `json:"budget,omitempty"`

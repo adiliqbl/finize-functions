@@ -21,7 +21,7 @@ const (
 )
 
 type RecurringTask struct {
-	Id            string                 `json:"id"`
+	ID            string                 `json:"id"`
 	UserID        string                 `json:"user"`
 	Type          TaskType               `json:"type"`
 	Frequency     Frequency              `json:"frequency"`
