@@ -5,6 +5,7 @@ import (
 	"context"
 	"finize-functions.app/data"
 	"finize-functions.app/data/model"
+	"finize-functions.app/service"
 	"finize-functions.app/tests/fake"
 	"finize-functions.app/util"
 	"github.com/stretchr/testify/assert"
@@ -15,13 +16,13 @@ import (
 func TestCreate(t *testing.T) {
 	database := fake.NewFirestoreService[model.User](context.Background())
 	user := fake.NewUser(fake.NewUserEvent("", "name", "email@test.com"))
-	id, err := database.Create("users", nil, fake.MapTo[map[string]interface{}](user))
+	id, err := database.Create(service.UsersDB(), nil, fake.MapTo[map[string]interface{}](user))
 
 	assert.True(t, err == nil)
 	assert.True(t, !util.NullOrEmpty(id))
 
 	user = fake.NewUser(fake.NewUserEvent("", "name", "email@test.com"))
-	id, err = database.Create("users", util.Pointer("test-id"), fake.MapTo[map[string]interface{}](user))
+	id, err = database.Create(service.UsersDB(), util.Pointer("test-id"), fake.MapTo[map[string]interface{}](user))
 
 	assert.True(t, err == nil)
 	assert.Equal(t, "test-id", *id)
@@ -30,10 +31,10 @@ func TestCreate(t *testing.T) {
 func TestGet(t *testing.T) {
 	database := fake.NewFirestoreService[model.User](context.Background())
 	testUser := fake.NewUser(fake.NewUserEvent("", "name", "email@test.com"))
-	id, _ := database.Create("users", nil, fake.MapTo[map[string]interface{}](testUser))
+	id, _ := database.Create(service.UsersDB(), nil, fake.MapTo[map[string]interface{}](testUser))
 	testUser.ID = *id
 
-	user, _ := database.Find("users/"+testUser.ID, nil)
+	user, _ := database.Find(service.UserDoc(testUser.ID), nil)
 	assert.True(t, user != nil)
 	assert.Equal(t, testUser, *user)
 }
@@ -77,14 +78,14 @@ func TestPaginate(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	database := fake.NewFirestoreService[model.User](context.Background())
 	testUser := fake.NewUser(fake.NewUserEvent("", "name", "email@test.com"))
-	id, _ := database.Create("users", nil, fake.MapTo[map[string]interface{}](testUser))
+	id, _ := database.Create(service.UsersDB(), nil, fake.MapTo[map[string]interface{}](testUser))
 	testUser.ID = *id
 	testUser.Name = "new name"
 
-	ok, _ := database.Update("users/"+testUser.ID, fake.MapTo[map[string]interface{}](testUser))
+	ok, _ := database.Update(service.UserDoc(testUser.ID), fake.MapTo[map[string]interface{}](testUser))
 	assert.True(t, ok)
 
-	user, _ := database.Find("users/"+testUser.ID, nil)
+	user, _ := database.Find(service.UserDoc(testUser.ID), nil)
 	assert.True(t, user != nil)
 	assert.Equal(t, testUser, *user)
 }
@@ -92,11 +93,11 @@ func TestUpdate(t *testing.T) {
 func TestDelete(t *testing.T) {
 	database := fake.NewFirestoreService[model.User](context.Background())
 	testUser := fake.NewUser(fake.NewUserEvent("", "name", "email@test.com"))
-	id, _ := database.Create("users", nil, fake.MapTo[map[string]interface{}](testUser))
-	ok, _ := database.Delete("users/" + *id)
+	id, _ := database.Create(service.UsersDB(), nil, fake.MapTo[map[string]interface{}](testUser))
+	ok, _ := database.Delete(service.UserDoc(*id))
 	assert.True(t, ok)
 
-	user, _ := database.Find("users/"+*id, nil)
+	user, _ := database.Find(service.UserDoc(*id), nil)
 	assert.True(t, user == nil)
 }
 
@@ -107,7 +108,7 @@ func TestTransaction(t *testing.T) {
 	assert.True(t, !util.NullOrEmpty(id1))
 	assert.True(t, !util.NullOrEmpty(id2))
 
-	_, _ = database.Doc("events/event").Delete(context.Background())
+	_, _ = database.Doc(service.EventDoc("event")).Delete(context.Background())
 	assert.False(t, eventService.IsProcessed())
 
 	a1, _ := database.Find("accounts/"+*id1, nil)
@@ -152,35 +153,35 @@ func TestTransaction(t *testing.T) {
 func TestBatch(t *testing.T) {
 	database := fake.NewFirestoreService[model.User](context.Background())
 
-	id1, _ := database.Create("users", nil, fake.MapTo[map[string]interface{}](fake.NewUser(fake.NewUserEvent("", "name one", "email@test.com"))))
-	id2, _ := database.Create("users", nil, fake.MapTo[map[string]interface{}](fake.NewUser(fake.NewUserEvent("", "name two", "email@test.com"))))
+	id1, _ := database.Create(service.UsersDB(), nil, fake.MapTo[map[string]interface{}](fake.NewUser(fake.NewUserEvent("", "name one", "email@test.com"))))
+	id2, _ := database.Create(service.UsersDB(), nil, fake.MapTo[map[string]interface{}](fake.NewUser(fake.NewUserEvent("", "name two", "email@test.com"))))
 	assert.True(t, !util.NullOrEmpty(id1))
 	assert.True(t, !util.NullOrEmpty(id2))
 
-	_, _ = database.Doc("events/event").Delete(context.Background())
+	_, _ = database.Doc(service.EventDoc("event")).Delete(context.Background())
 	assert.False(t, eventService.IsProcessed())
 
-	u1, _ := database.Find("users/"+*id1, nil)
-	u2, _ := database.Find("users/"+*id2, nil)
+	u1, _ := database.Find(service.UserDoc(*id1), nil)
+	u2, _ := database.Find(service.UserDoc(*id2), nil)
 	assert.Equal(t, "name one", u1.Name)
 	assert.Equal(t, "name two", u2.Name)
 
 	createData := map[string]interface{}{"test": "value"}
 	err := database.Batch(func() []data.DatabaseOperation {
 		return []data.DatabaseOperation{{
-			Ref: database.Doc("users/" + *id1),
+			Ref: database.Doc(service.UserDoc(*id1)),
 			Data: []firestore.Update{{
 				Path:  "name",
 				Value: "new name one",
 			}},
 		}, {
-			Ref: database.Doc("users/" + *id2),
+			Ref: database.Doc(service.UserDoc(*id2)),
 			Data: []firestore.Update{{
 				Path:  "name",
 				Value: "new name two",
 			}},
 		}, {
-			Ref:    database.Doc("users/batch-create"),
+			Ref:    database.Doc(service.UserDoc("batch-create")),
 			Data:   createData,
 			Create: true,
 		}}
@@ -188,10 +189,10 @@ func TestBatch(t *testing.T) {
 
 	assert.True(t, err == nil)
 
-	u1, _ = database.Find("users/"+*id1, nil)
-	u2, _ = database.Find("users/"+*id2, nil)
+	u1, _ = database.Find(service.UserDoc(*id1), nil)
+	u2, _ = database.Find(service.UserDoc(*id2), nil)
 
-	snap, _ := database.Doc("users/batch-create").Get(context.Background())
+	snap, _ := database.Doc(service.UserDoc("batch-create")).Get(context.Background())
 
 	assert.Equal(t, "new name one", u1.Name)
 	assert.Equal(t, "new name two", u2.Name)

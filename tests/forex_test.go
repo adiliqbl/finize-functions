@@ -3,6 +3,7 @@ package tests
 import (
 	"context"
 	"finize-functions.app/functions"
+	"finize-functions.app/service"
 	"finize-functions.app/tests/fake"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -16,7 +17,7 @@ func TestGetExchangeRate(t *testing.T) {
 		"two": 2,
 	})
 
-	_, _ = testFactory.Firestore().Doc("exchange-rates/USD").Delete(context.Background())
+	_, _ = testFactory.Firestore().Doc(service.ExchangeRateDoc("USD")).Delete(context.Background())
 	rate := exchangeRateService.GetRate("USD", "PKR")
 	assert.True(t, rate == nil)
 

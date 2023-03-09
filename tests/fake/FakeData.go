@@ -21,6 +21,9 @@ func NewUserEvent(id string, name string, email string) model.UserEvent {
 		ID:    data.StringValue{Value: &id},
 		Name:  data.StringValue{Value: &name},
 		Email: data.StringValue{Value: &email},
+		Profile: data.MapValue[model.ProfileEvent]{Value: util.Pointer(model.ProfileEvent{
+			Currency: data.StringValue{Value: util.Pointer("CURR")},
+		})},
 	}
 }
 
@@ -34,6 +37,13 @@ func NewUserEventMap(user model.UserEvent) map[string]interface{} {
 		},
 		"email": map[string]interface{}{
 			"stringValue": user.Email.Value,
+		},
+		"profile": map[string]interface{}{
+			"mapValue": map[string]interface{}{
+				"currency": map[string]interface{}{
+					"stringValue": user.Profile.Value.Currency.Value,
+				},
+			},
 		},
 	}
 }

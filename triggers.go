@@ -93,3 +93,43 @@ func OnBudgetDeleted(ctx context.Context, e data.FirestoreEvent[model.BudgetEven
 	}
 	return functions.OnBudgetDeleted(factory, budget)
 }
+
+//goland:noinspection GoUnusedExportedFunction,GoUnusedParameter
+func OnUserUpdated(ctx context.Context, e data.FirestoreEvent[model.UserEvent]) error {
+	meta, err := metadata.FromContext(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get metadata %v", err)
+	}
+
+	factory := service.NewServiceFactory(ctx, meta.EventID, e.UserID())
+	if factory.EventService().IsProcessed() {
+		return nil
+	}
+
+	userOld, err := util.MapTo[model.User](e.OldValue.Data)
+	userNew, err2 := util.MapTo[model.User](e.Value.Data)
+	if err != nil || err2 != nil {
+		log.Fatalf("Failed to parse transaction %v", err)
+	}
+	return functions.OnUserUpdated(factory, userOld, userNew, e.UpdateMask.Fields)
+}
+
+//goland:noinspection GoUnusedExportedFunction,GoUnusedParameter
+func OnAccountUpdated(ctx context.Context, e data.FirestoreEvent[model.AccountEvent]) error {
+	meta, err := metadata.FromContext(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get metadata %v", err)
+	}
+
+	factory := service.NewServiceFactory(ctx, meta.EventID, e.UserID())
+	if factory.EventService().IsProcessed() {
+		return nil
+	}
+
+	accountOld, err := util.MapTo[model.Account](e.OldValue.Data)
+	accountNew, err2 := util.MapTo[model.Account](e.Value.Data)
+	if err != nil || err2 != nil {
+		log.Fatalf("Failed to parse transaction %v", err)
+	}
+	return functions.OnAccountUpdated(factory, accountOld, accountNew, e.UpdateMask.Fields)
+}
