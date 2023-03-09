@@ -22,4 +22,5 @@ func TestUserFromEvent(t *testing.T) {
 	assert.Equal(t, "id", want.ID)
 	assert.Equal(t, "name", want.Name)
 	assert.Equal(t, "email", want.Email)
+	assert.Equal(t, "CURR", want.Profile.Currency)
 }

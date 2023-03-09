@@ -6,6 +6,8 @@ type TaskType string
 type Frequency string
 
 const (
+	FieldUser      = "user"
+	FieldData      = "data"
 	FieldLastDate  = "lastDate"
 	FieldCreatedAt = "createdAt"
 )
