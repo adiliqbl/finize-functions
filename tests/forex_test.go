@@ -9,29 +9,55 @@ import (
 	"testing"
 )
 
-func TestGetExchangeRate(t *testing.T) {
+func TestGetExchangeRateWithCache(t *testing.T) {
+	_, _ = testFactory.Firestore().Doc(service.ExchangeRateDoc("USD")).Delete(context.Background())
+
 	fake.MockForexService.On("GetRates", "USD").Return(map[string]float64{
 		"PKR": 200,
 		"USD": 1,
-		"one": 1,
-		"two": 2,
+		"one": 25,
+	})
+	_ = exchangeRateService.SetRates("USD", map[string]float64{
+		"PKR": 100,
 	})
 
-	_, _ = testFactory.Firestore().Doc(service.ExchangeRateDoc("USD")).Delete(context.Background())
-	rate := exchangeRateService.GetRate("USD", "PKR")
-	assert.True(t, rate == nil)
+	assert.Equal(t, 100.0, exchangeRateService.GetRate("USD", "PKR").Rate)
 
-	rate, _ = functions.GetExchangeRate(testFactory, "USD", "PKR")
+	rate, _ := functions.GetExchangeRate(testFactory, "USD", "PKR", false)
+	assert.True(t, rate != nil)
+	assert.Equal(t, 100.0, rate.Rate)
+
+	assert.True(t, exchangeRateService.GetRate("USD", "one") == nil)
+	assert.Equal(t, 100.0, exchangeRateService.GetRate("USD", "PKR").Rate)
+
+	// Ignoring cached values
+	rate, _ = functions.GetExchangeRate(testFactory, "USD", "PKR", true)
 	assert.True(t, rate != nil)
 	assert.Equal(t, 200.0, rate.Rate)
 
-	usdToPkr := exchangeRateService.GetRate("USD", "PKR")
-	usdToTwo := exchangeRateService.GetRate("USD", "two")
-	usdToThree := exchangeRateService.GetRate("USD", "three")
+	assert.Equal(t, 25.0, exchangeRateService.GetRate("USD", "one").Rate)
+	assert.Equal(t, 200.0, exchangeRateService.GetRate("USD", "PKR").Rate)
+}
 
-	assert.True(t, usdToPkr != nil)
-	assert.True(t, usdToPkr != nil)
-	assert.True(t, usdToThree == nil)
-	assert.Equal(t, 200.0, usdToPkr.Rate)
-	assert.Equal(t, 2.0, usdToTwo.Rate)
+func TestGetExchangeRateWithoutCache(t *testing.T) {
+	_, _ = testFactory.Firestore().Doc(service.ExchangeRateDoc("USD")).Delete(context.Background())
+
+	fake.MockForexService.On("GetRates", "USD").Return(map[string]float64{
+		"PKR": 200,
+		"USD": 1,
+		"one": 25,
+	})
+	_ = exchangeRateService.SetRates("USD", map[string]float64{
+		"PKR": 100,
+	})
+
+	assert.True(t, exchangeRateService.GetRate("USD", "one") == nil)
+	assert.True(t, exchangeRateService.GetRate("USD", "two") == nil)
+
+	rate, _ := functions.GetExchangeRate(testFactory, "USD", "one", false)
+	assert.True(t, rate != nil)
+	assert.Equal(t, 25.0, rate.Rate)
+
+	assert.Equal(t, 25.0, exchangeRateService.GetRate("USD", "one").Rate)
+	assert.Equal(t, 200.0, exchangeRateService.GetRate("USD", "PKR").Rate)
 }

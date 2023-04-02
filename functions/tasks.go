@@ -21,7 +21,7 @@ func getExchangeRate(factory service.Factory, from string, to string) (float64, 
 		return rate, nil
 	}
 
-	if rate, err := GetExchangeRate(factory, from, to); err != nil {
+	if rate, err := GetExchangeRate(factory, from, to, false); err != nil {
 		return 0, nil
 	} else {
 		exchangeRates[from+"_"+to] = rate.Rate
