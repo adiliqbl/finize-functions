@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func init() {
@@ -21,8 +22,14 @@ func init() {
 func GetExchangeRate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	fromIso := r.URL.Query().Get("from")
-	toIso := r.URL.Query().Get("to")
+	query := r.URL.Query()
+	fromIso := query.Get("from")
+	toIso := query.Get("to")
+
+	refresh := false
+	if isRefresh, err := strconv.ParseBool(query.Get("refresh")); err == nil {
+		refresh = isRefresh
+	}
 
 	if fromIso == "" || toIso == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -31,7 +38,7 @@ func GetExchangeRate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	factory := service.NewServiceFactory(context.Background(), "", "")
-	if rate, err := functions.GetExchangeRate(factory, fromIso, toIso); err != nil {
+	if rate, err := functions.GetExchangeRate(factory, fromIso, toIso, refresh); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("Failed to get exchange rates: %v", err)))
 	} else {

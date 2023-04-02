@@ -7,16 +7,22 @@ import (
 	"time"
 )
 
-func GetExchangeRate(factory services.Factory, iso string, toIso string) (*model.ExchangeRate, error) {
+const (
+	CacheHours = 24
+)
+
+func GetExchangeRate(factory services.Factory, iso string, toIso string, refresh bool) (*model.ExchangeRate, error) {
 	if iso == toIso {
 		return &model.ExchangeRate{Rate: 1.0, Date: time.Now().UTC()}, nil
 	}
 
 	exchange := factory.ExchangeRateService()
 
-	if rate := exchange.GetRate(iso, toIso); rate != nil {
-		if rate.Date.Sub(time.Now().UTC()).Hours()*24 <= 48 { // If less than 2 days, return cached
-			return rate, nil
+	if !refresh {
+		if rate := exchange.GetRate(iso, toIso); rate != nil {
+			if rate.Date.Sub(time.Now().UTC()).Hours()*24 <= CacheHours { // If less than Cache Time, return cached
+				return rate, nil
+			}
 		}
 	}
 
